@@ -1,0 +1,213 @@
+from sqlalchemy import func
+from sqlalchemy.orm import Session
+
+from app.models.produto import Produto
+from app.models.fornecedor import Fornecedor
+from app.models.item_entrada import ItemEntrada
+from app.models.entrada import Entrada
+from app.models.departamento import Departamento
+
+
+class DashboardRepository:
+
+    def total_produtos(self, db: Session):
+        return db.query(Produto).count()
+
+    def total_fornecedores(self, db: Session):
+        return db.query(Fornecedor).count()
+
+    def total_compras(self, db: Session):
+        return db.query(ItemEntrada).count()
+
+    def compras_por_mes(self, db: Session):
+        resultado = (
+            db.query(
+                func.to_char(
+                    Entrada.data_entrada,
+                    "Mon"
+                ).label("mes"),
+                func.sum(
+                    ItemEntrada.quantidade * ItemEntrada.custo
+                ).label("valor"),
+            )
+            .join(
+                ItemEntrada,
+                Entrada.id == ItemEntrada.entrada_id,
+            )
+            .group_by(
+                func.to_char(
+                    Entrada.data_entrada,
+                    "Mon"
+                )
+            )
+            .order_by(
+                func.min(Entrada.data_entrada)
+            )
+            .all()
+        )
+
+        meses = {
+            "Jan": 0,
+            "Fev": 0,
+            "Mar": 0,
+            "Abr": 0,
+            "Mai": 0,
+            "Jun": 0,
+            "Jul": 0,
+            "Ago": 0,
+            "Set": 0,
+            "Out": 0,
+            "Nov": 0,
+            "Dez": 0,
+        }
+
+        for linha in resultado:
+            mes = linha.mes.capitalize()[:3]
+
+            if mes in meses:
+                meses[mes] = float(linha.valor or 0)
+
+        return [
+            {
+                "mes": mes,
+                "valor": valor,
+            }
+            for mes, valor in meses.items()
+        ]
+        
+    def top_fornecedores(self, db: Session):
+        resultado = (
+            db.query(
+                Fornecedor.nome_fantasia.label("fornecedor"),
+                func.sum(
+                    ItemEntrada.quantidade * ItemEntrada.custo
+                ).label("valor"),
+            )
+            .join(
+                Entrada,
+                Fornecedor.id == Entrada.fornecedor_id,
+            )
+            .join(
+                ItemEntrada,
+                Entrada.id == ItemEntrada.entrada_id,
+            )
+            .group_by(
+                Fornecedor.nome_fantasia
+            )
+            .order_by(
+                func.sum(
+                    ItemEntrada.quantidade * ItemEntrada.custo
+                ).desc()
+            )
+            .limit(5)
+            .all()
+        )
+
+        return [
+            {
+                "fornecedor": linha.fornecedor or "Fornecedor não identificado",
+                "valor": float(linha.valor or 0),
+            }
+            for linha in resultado
+        ]
+    def compras_por_departamento(self, db: Session):
+
+        resultado = (
+            db.query(
+                Departamento.descricao.label("departamento"),
+                func.sum(
+                    ItemEntrada.quantidade * ItemEntrada.custo
+                ).label("valor"),
+            )
+            .join(
+                Produto,
+                Produto.departamento == Departamento.codigo,
+            )
+            .join(
+                ItemEntrada,
+                ItemEntrada.produto_id == Produto.id,
+            )
+            .group_by(
+                Departamento.descricao
+            )
+            .order_by(
+                func.sum(
+                    ItemEntrada.quantidade * ItemEntrada.custo
+                ).desc()
+            )
+            .all()
+        )
+
+        return [
+            {
+                "departamento": linha.departamento or "Sem departamento",
+                "valor": float(linha.valor or 0),
+            }
+            for linha in resultado
+        ]
+    def alertas(self, db: Session):
+
+        alertas = []
+
+        produtos_sem_estoque = (
+            db.query(Produto)
+            .filter(
+                Produto.estoque <= 0
+            )
+            .limit(10)
+            .all()
+        )
+
+        for produto in produtos_sem_estoque:
+            alertas.append(
+                {
+                    "tipo": "SEM_ESTOQUE",
+                    "produto": produto.descricao,
+                    "detalhe": "Estoque atual: 0",
+                }
+            )
+
+
+        produtos_sem_custo = (
+            db.query(Produto)
+            .filter(
+                Produto.custo <= 0
+            )
+            .limit(10)
+            .all()
+        )
+
+        for produto in produtos_sem_custo:
+            alertas.append(
+                {
+                    "tipo": "SEM_CUSTO",
+                    "produto": produto.descricao,
+                    "detalhe": "Produto sem custo cadastrado",
+                }
+            )
+
+
+        produtos_sem_movimento = (
+            db.query(Produto)
+            .outerjoin(
+                ItemEntrada,
+                Produto.id == ItemEntrada.produto_id
+            )
+            .filter(
+                ItemEntrada.id == None
+            )
+            .limit(10)
+            .all()
+        )
+
+        for produto in produtos_sem_movimento:
+            alertas.append(
+                {
+                    "tipo": "SEM_COMPRA",
+                    "produto": produto.descricao,
+                    "detalhe": "Nunca houve entrada registrada",
+                }
+            )
+
+
+        return alertas
