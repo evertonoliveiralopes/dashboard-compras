@@ -26,3 +26,5 @@ class DashboardService:
         return self.repository.compras_por_departamento(db)
     def alertas(self, db: Session):
         return self.repository.alertas(db)
+    def ultimas_importacoes(self, db: Session):
+        return self.repository.ultimas_importacoes(db)

@@ -6,6 +6,7 @@ from app.models.fornecedor import Fornecedor
 from app.models.item_entrada import ItemEntrada
 from app.models.entrada import Entrada
 from app.models.departamento import Departamento
+from app.models.historico_importacao import HistoricoImportacao
 
 
 class DashboardRepository:
@@ -211,3 +212,26 @@ class DashboardRepository:
 
 
         return alertas
+    def ultimas_importacoes(self, db: Session):
+        resultado = (
+            db.query(HistoricoImportacao)
+            .order_by(
+                HistoricoImportacao.criado_em.desc()
+            )
+            .limit(5)
+            .all()
+        )
+
+        return [
+            {
+                "tipo": item.tipo,
+                "arquivo": item.arquivo,
+                "registros": item.registros,
+                "inseridos": item.inseridos,
+                "atualizados": item.atualizados,
+                "erros": item.erros,
+                "status": item.status,
+                "criado_em": item.criado_em,
+            }
+            for item in resultado
+        ]

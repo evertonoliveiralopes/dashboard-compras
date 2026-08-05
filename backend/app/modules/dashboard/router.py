@@ -31,3 +31,7 @@ def compras_por_departamento(db: Session = Depends(get_db)):
 @router.get("/alertas")
 def alertas(db: Session = Depends(get_db)):
     return service.alertas(db)
+
+@router.get("/ultimas-importacoes")
+def ultimas_importacoes(db: Session = Depends(get_db)):
+    return service.ultimas_importacoes(db)
