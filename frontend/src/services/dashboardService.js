@@ -5,3 +5,7 @@ export async function buscarIndicadores() {
 
   return response.data;
 }
+export async function buscarUltimasImportacoes() {
+  const { data } = await api.get("/dashboard/ultimas-importacoes");
+  return data;
+}

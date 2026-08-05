@@ -17,20 +17,20 @@ const lojas = [
   {
     id: 1,
     codigo: "001",
-    nome: "Supermercado Cruzeiro",
-    unidade: "Matriz",
+    nome: "Comercial Bigus",
+    unidade: "Morro do Algodão",
   },
   {
     id: 2,
     codigo: "002",
-    nome: "Supermercado Cruzeiro",
-    unidade: "Filial Centro",
+    nome: "Comercial Bigus 2",
+    unidade: "Barranco Alto",
   },
   {
     id: 3,
     codigo: "003",
-    nome: "Cruzeiro Atacado",
-    unidade: "Atacado",
+    nome: "Comecial Peck",
+    unidade: "Pereque Mirim",
   },
 ];
 
