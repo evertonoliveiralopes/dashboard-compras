@@ -7,6 +7,7 @@ from app.modules.entradas.router import router as entradas_router
 from app.modules.auth.router import router as auth_router
 from app.modules.dashboard.router import router as dashboard_router
 from app.modules.departamentos.router import router as departamentos_router
+from app.modules.config_alertas.router import router as config_alertas_router
 
 
 
@@ -31,6 +32,7 @@ app.include_router(entradas_router)
 app.include_router(auth_router)
 app.include_router(dashboard_router)
 app.include_router(departamentos_router)
+app.include_router(config_alertas_router)
 
 
 @app.get("/")

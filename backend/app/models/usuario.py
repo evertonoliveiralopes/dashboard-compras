@@ -2,7 +2,7 @@ from sqlalchemy import Boolean, Column, DateTime, Integer, String
 from sqlalchemy.sql import func
 
 from app.database import Base
-
+from sqlalchemy.orm import relationship
 
 class Usuario(Base):
     __tablename__ = "usuarios"
@@ -25,4 +25,9 @@ class Usuario(Base):
         DateTime(timezone=True),
         server_default=func.now(),
         onupdate=func.now(),
+    )
+    config_alertas = relationship(
+        "ConfigAlerta",
+        back_populates="usuario",
+        cascade="all, delete-orphan",
     )
