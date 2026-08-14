@@ -14,7 +14,7 @@ class DashboardService:
             "compras": self.repository.total_compras(db),
             "produtos": self.repository.total_produtos(db),
             "fornecedores": self.repository.total_fornecedores(db),
-            "estoque": 0,
+            "estoque": self.repository.total_valor_estoque(db),
         }
         
     def compras_por_mes(self, db: Session):

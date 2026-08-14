@@ -1,15 +1,12 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import text
+
+from app.models.departamento import Departamento
 
 
 def listar_departamentos(db: Session):
 
-    sql = text("""
-        SELECT DISTINCT
-            departamento
-        FROM produtos
-        WHERE departamento IS NOT NULL
-        ORDER BY departamento
-    """)
-
-    return db.execute(sql).fetchall()
+    return (
+        db.query(Departamento)
+        .order_by(Departamento.descricao)
+        .all()
+    )

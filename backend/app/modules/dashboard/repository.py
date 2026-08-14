@@ -235,3 +235,12 @@ class DashboardRepository:
             }
             for item in resultado
         ]
+    def total_valor_estoque(self, db: Session):
+        resultado = (
+            db.query(
+                func.coalesce(
+                    func.sum(Produto.estoque * Produto.custo), 0
+                )
+            ).scalar()
+        )
+        return float(resultado)

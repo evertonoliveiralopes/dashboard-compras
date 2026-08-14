@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 
-import MainLayout from "../../layouts/MainLayout";
 import DashboardHeader from "../../components/dashboard/DashboardHeader";
 import DashboardGrid from "../../components/dashboard/DashboardGrid";
 
@@ -38,17 +37,17 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <MainLayout>
-        <Typography>Carregando Dashboard...</Typography>
-      </MainLayout>
+      <Typography>
+        Carregando Dashboard...
+      </Typography>
     );
   }
 
   return (
-    <MainLayout>
+    <>
       <DashboardHeader />
 
       <DashboardGrid indicadores={indicadores} />
-    </MainLayout>
+    </>
   );
 }

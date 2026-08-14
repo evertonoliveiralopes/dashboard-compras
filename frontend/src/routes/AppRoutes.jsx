@@ -11,7 +11,26 @@ import PrivateRoute from "./PrivateRoute";
 export default function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Login />} />
+
+      {/* Login */}
+      <Route
+        path="/"
+        element={<Login />}
+      />
+
+
+      {/* Seleção de Loja */}
+      <Route
+        path="/lojas"
+        element={
+          <PrivateRoute>
+            <SelecaoLoja />
+          </PrivateRoute>
+        }
+      />
+
+
+      {/* Dashboard */}
       <Route
         path="/dashboard"
         element={
@@ -24,6 +43,7 @@ export default function AppRoutes() {
       />
 
 
+      {/* Configuração de Alertas */}
       <Route
         path="/configuracao-alertas"
         element={
@@ -35,17 +55,13 @@ export default function AppRoutes() {
         }
       />
 
+
+      {/* Rota não encontrada */}
       <Route
         path="*"
         element={<Navigate to="/" replace />}
       />
-      <Route
-        path="/configuracao-alertas"
-        element={<ConfiguracaoAlertas />}
-      />
 
     </Routes>
-
-    
   );
 }

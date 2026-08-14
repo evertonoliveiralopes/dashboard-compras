@@ -81,8 +81,9 @@ def obter_departamentos(
 
     return [
         {
-            "codigo": departamento.departamento,
-            "descricao": departamento.departamento,
+            "id": departamento.id,
+            "codigo": departamento.codigo,
+            "descricao": departamento.descricao,
         }
         for departamento in departamentos
     ]
