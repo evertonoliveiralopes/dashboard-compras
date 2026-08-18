@@ -8,6 +8,8 @@ from .service import ConfigAlertaService
 from typing import List
 
 from .schemas import ConfigAlertaItem
+from app.models.usuario import Usuario
+from app.modules.auth.security import get_current_user
 
 router = APIRouter(
     prefix="/config-alertas",
@@ -17,23 +19,26 @@ router = APIRouter(
 service = ConfigAlertaService()
 
 
-@router.get("/{usuario_id}")
-def listar(usuario_id: int, db: Session = Depends(get_db)):
+@router.get("")
+def listar(
+    usuario: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
 
     return service.listar(
         db,
-        usuario_id,
+        usuario.id,
     )
     
-@router.post("/{usuario_id}")
+@router.post("")
 def salvar(
-    usuario_id: int,
     configuracoes: List[ConfigAlertaItem],
+    usuario: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
 
     return service.salvar(
         db,
-        usuario_id,
+        usuario.id,
         configuracoes,
     )

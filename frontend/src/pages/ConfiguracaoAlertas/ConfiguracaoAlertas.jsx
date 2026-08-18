@@ -15,23 +15,41 @@ import {
 
 import { useEffect, useState } from "react";
 import { buscarDepartamentos } from "../../services/departamentoService";
+import { buscarConfiguracoesAlertas,  salvarConfiguracoesAlertas } from "../../services/configAlertaService";
+import { buscarUsuarioAtual } from "../../services/authService";
 
 export default function ConfiguracaoAlertas() {
   const [departamentos, setDepartamentos] = useState([]);
-  const [departamentosSelecionados, setDepartamentosSelecionados] =
-    useState([]);
+  const [departamentosSelecionados, setDepartamentosSelecionados] = useState([]);
+  const [usuario, setUsuario] = useState(null);
 
-  useEffect(() => {
-    async function carregarDepartamentos() {
+ useEffect(() => {
+    async function carregarTela() {
       try {
-        const dados = await buscarDepartamentos();
-        setDepartamentos(dados);
+        const usuarioAtual = await buscarUsuarioAtual();
+
+        setUsuario(usuarioAtual);
+
+        const [listaDepartamentos, configuracoes] =
+          await Promise.all([
+            buscarDepartamentos(),
+            buscarConfiguracoesAlertas(),
+          ]);
+
+        setDepartamentos(listaDepartamentos);
+
+        const selecionados = configuracoes
+          .filter((item) => item.ativo)
+          .map((item) => item.departamento_id);
+
+        setDepartamentosSelecionados(selecionados);
+
       } catch (error) {
-        console.error("Erro ao carregar departamentos:", error);
+        console.error("Erro ao carregar configurações:", error);
       }
     }
 
-    carregarDepartamentos();
+    carregarTela();
   }, []);
 
   function selecionarDepartamento(departamentoId) {
@@ -57,6 +75,27 @@ export default function ConfiguracaoAlertas() {
 
   function limparSelecao() {
     setDepartamentosSelecionados([]);
+  }
+
+  async function salvarConfiguracoes() {
+    try {
+      const payload = departamentos.map((departamento) => ({
+        departamento_id: departamento.id,
+        ativo: departamentosSelecionados.includes(
+          departamento.id
+        ),
+      }));
+
+      await salvarConfiguracoesAlertas(
+        payload
+      );
+
+      alert("Configurações salvas com sucesso!");
+
+    } catch (error) {
+      console.error(error);
+      alert("Erro ao salvar configurações.");
+    }
   }
 
   // Divide os departamentos em 4 colunas
@@ -345,6 +384,7 @@ export default function ConfiguracaoAlertas() {
       {/* SALVAR */}
       <Button
         variant="contained"
+        onClick={salvarConfiguracoes}
         sx={{
           mt: 3,
           px: 3,

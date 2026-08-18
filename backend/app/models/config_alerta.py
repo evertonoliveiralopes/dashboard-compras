@@ -11,9 +11,14 @@ from app.database import Base
 
 
 class ConfigAlerta(Base):
+
     __tablename__ = "config_alertas"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True,
+    )
 
     usuario_id = Column(
         Integer,
