@@ -5,6 +5,7 @@ import SelecaoLoja from "../pages/SelecaoLoja/SelecaoLoja";
 import Dashboard from "../pages/Dashboard/Dashboard";
 import ConfiguracaoAlertas from "../pages/ConfiguracaoAlertas/ConfiguracaoAlertas";
 import MainLayout from "../layouts/MainLayout";
+import Produtos from "../pages/Produtos/Produtos";
 
 import PrivateRoute from "./PrivateRoute";
 
@@ -54,7 +55,17 @@ export default function AppRoutes() {
           </PrivateRoute>
         }
       />
-
+      {/* Produtos */}
+      <Route
+        path="/produtos"
+        element={
+          <PrivateRoute>
+            <MainLayout>
+              <Produtos />
+            </MainLayout>
+          </PrivateRoute>
+        }
+      />
 
       {/* Rota não encontrada */}
       <Route

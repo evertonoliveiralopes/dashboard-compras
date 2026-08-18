@@ -2,8 +2,11 @@ from fastapi import UploadFile
 from sqlalchemy.orm import Session
 import pandas as pd
 
+from . import repository
+
 from .importador import importar_dataframe
 from app.models.historico_importacao import HistoricoImportacao
+
 
 
 class ProdutoService:
@@ -52,3 +55,20 @@ class ProdutoService:
         db.commit()
 
         return resultado
+    
+    def listar(
+        self,
+        db: Session,
+        busca: str | None = None,
+        departamento: str | None = None,
+        offset: int = 0,
+        limit: int = 50,
+    ):
+
+        return repository.listar_produtos(
+            db=db,
+            busca=busca,
+            departamento=departamento,
+            offset=offset,
+            limit=limit,
+        )

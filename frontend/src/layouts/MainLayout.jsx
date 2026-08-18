@@ -21,10 +21,13 @@ import AnalyticsIcon from "@mui/icons-material/Analytics";
 import PsychologyIcon from "@mui/icons-material/Psychology";
 import SettingsIcon from "@mui/icons-material/Settings";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import { useNavigate } from "react-router-dom";
 
 const drawerWidth = 260;
 
 export default function MainLayout({ children }) {
+  const navigate = useNavigate();
+
   return (
     <Box sx={{ display: "flex" }}>
       {/* Menu lateral */}
@@ -48,13 +51,42 @@ export default function MainLayout({ children }) {
         <Divider />
 
         <List>
-          <MenuItem icon={<DashboardIcon />} text="Dashboard" />
-          <MenuItem icon={<ShoppingCartIcon />} text="Compras" />
-          <MenuItem icon={<Inventory2Icon />} text="Produtos" />
-          <MenuItem icon={<LocalShippingIcon />} text="Fornecedores" />
-          <MenuItem icon={<AnalyticsIcon />} text="Business Intelligence" />
-          <MenuItem icon={<PsychologyIcon />} text="Radar do Comprador" />
-          <MenuItem icon={<SettingsIcon />} text="Configurações" />
+          <MenuItem
+            icon={<DashboardIcon />}
+            text="Dashboard"
+            onClick={() => navigate("/dashboard")}
+          />
+
+          <MenuItem
+            icon={<ShoppingCartIcon />}
+            text="Compras"
+          />
+
+          <MenuItem
+            icon={<Inventory2Icon />}
+            text="Produtos"
+            onClick={() => navigate("/produtos")}
+          />
+
+          <MenuItem
+            icon={<LocalShippingIcon />}
+            text="Fornecedores"
+          />
+
+          <MenuItem
+            icon={<AnalyticsIcon />}
+            text="Business Intelligence"
+          />
+
+          <MenuItem
+            icon={<PsychologyIcon />}
+            text="Radar do Comprador"
+          />
+
+          <MenuItem
+            icon={<SettingsIcon />}
+            text="Configurações"
+          />
         </List>
       </Drawer>
 
@@ -109,9 +141,9 @@ export default function MainLayout({ children }) {
   );
 }
 
-function MenuItem({ icon, text }) {
+function MenuItem({ icon, text, onClick }) {
   return (
-    <ListItemButton>
+    <ListItemButton onClick={onClick}>
       <ListItemIcon>{icon}</ListItemIcon>
       <ListItemText primary={text} />
     </ListItemButton>
