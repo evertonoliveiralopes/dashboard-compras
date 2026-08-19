@@ -39,10 +39,17 @@ def listar_produtos(
             Produto.status == status
         )
 
-    return (
+    total = query.count()
+
+    items = (
         query
         .order_by(Produto.descricao)
         .offset(offset)
         .limit(limit)
         .all()
     )
+
+    return {
+        "items": items,
+        "total": total,
+    }

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, Depends
 from sqlalchemy.orm import Session
+from .schemas import ProdutoResponse, ProdutosPaginadosResponse
 
 from typing import List
 
@@ -42,7 +43,7 @@ async def importar_produtos(
 
 @router.get(
     "",
-    response_model=list[ProdutoResponse],
+    response_model=ProdutosPaginadosResponse,
 )
 def listar_produtos(
     busca: str | None = Query(

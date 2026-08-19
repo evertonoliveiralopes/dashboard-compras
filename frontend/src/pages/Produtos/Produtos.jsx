@@ -18,6 +18,7 @@ import {
   Select,
   MenuItem,
   Chip,
+  TablePagination,
 } from "@mui/material";
 
 import SearchIcon from "@mui/icons-material/Search";
@@ -37,13 +38,18 @@ export default function Produtos() {
   const [erro, setErro] = useState("");
   const [ordem, setOrdem] = useState("asc");
   const [colunaOrdenacao, setColunaOrdenacao] = useState("descricao");
+  const [pagina, setPagina] = useState(0);
+  const [linhasPorPagina, setLinhasPorPagina] = useState(50);
+  const [totalProdutos, setTotalProdutos] = useState(0);
 
   async function carregarProdutos(
     filtros = {
       busca,
       departamento: departamentoSelecionado,
       status: statusSelecionado,
-    }
+    },
+    novaPagina = pagina,
+    novoLimite = linhasPorPagina
   ) {
     try {
       setCarregando(true);
@@ -53,11 +59,12 @@ export default function Produtos() {
         busca: filtros.busca,
         departamento: filtros.departamento,
         status: filtros.status,
-        offset: 0,
-        limit: 50,
+        offset: novaPagina * novoLimite,
+        limit: novoLimite,
       });
 
-      setProdutos(dados);
+      setProdutos(dados.items);
+      setTotalProdutos(dados.total);
     } catch (error) {
       console.error("Erro ao buscar produtos:", error);
 
@@ -84,6 +91,7 @@ export default function Produtos() {
   }, []);
 
   function handleBuscar() {
+    setPagina(0);
     carregarProdutos();
   }
   function obterDescricaoDepartamento(codigo) {
@@ -269,12 +277,17 @@ export default function Produtos() {
               setBusca("");
               setDepartamentoSelecionado("");
               setStatusSelecionado("");
+              setPagina(0);
 
-              carregarProdutos({
-                busca: "",
-                departamento: "",
-                status: "",
-              });
+              carregarProdutos(
+                {
+                  busca: "",
+                  departamento: "",
+                  status: "",
+                },
+                0,
+                linhasPorPagina
+              );
             }}
             sx={{
               height: 40,
@@ -506,7 +519,46 @@ export default function Produtos() {
           </Table>
 
         </TableContainer>
+        <TablePagination
+          component="div"
+          count={totalProdutos}
+          page={pagina}
+          onPageChange={(event, novaPagina) => {
+            setPagina(novaPagina);
 
+            carregarProdutos(
+              {
+                busca,
+                departamento: departamentoSelecionado,
+                status: statusSelecionado,
+              },
+              novaPagina,
+              linhasPorPagina
+            );
+          }}
+          rowsPerPage={linhasPorPagina}
+          onRowsPerPageChange={(event) => {
+            const novoLimite = parseInt(event.target.value, 10);
+
+            setLinhasPorPagina(novoLimite);
+            setPagina(0);
+
+            carregarProdutos(
+              {
+                busca,
+                departamento: departamentoSelecionado,
+                status: statusSelecionado,
+              },
+              0,
+              novoLimite
+            );
+          }}
+          rowsPerPageOptions={[25, 50, 100]}
+          labelRowsPerPage="Produtos por página:"
+          labelDisplayedRows={({ from, to, count }) =>
+            `${from}-${to} de ${count !== -1 ? count : `mais de ${to}`}`
+          }
+        />
       </Paper>
 
     </Box>

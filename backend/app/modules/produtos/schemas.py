@@ -17,3 +17,8 @@ class ProdutoResponse(BaseModel):
     model_config = ConfigDict(
         from_attributes=True
     )
+    
+class ProdutosPaginadosResponse(BaseModel):
+
+    items: list[ProdutoResponse]
+    total: int
