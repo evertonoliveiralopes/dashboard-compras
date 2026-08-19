@@ -17,6 +17,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Chip,
 } from "@mui/material";
 
 import SearchIcon from "@mui/icons-material/Search";
@@ -34,6 +35,8 @@ export default function Produtos() {
   const [carregando, setCarregando] = useState(false);
 
   const [erro, setErro] = useState("");
+  const [ordem, setOrdem] = useState("asc");
+  const [colunaOrdenacao, setColunaOrdenacao] = useState("descricao");
 
   async function carregarProdutos(
     filtros = {
@@ -89,6 +92,65 @@ export default function Produtos() {
     );
 
     return departamento?.descricao || codigo;
+  }
+
+  function ordenarProdutos(lista) {
+    return [...lista].sort((a, b) => {
+      let valorA = a[colunaOrdenacao];
+      let valorB = b[colunaOrdenacao];
+
+      if (colunaOrdenacao === "departamento") {
+        const departamentoA = departamentos.find(
+          (item) =>
+            String(item.codigo) === String(a.departamento)
+        );
+
+        const departamentoB = departamentos.find(
+          (item) =>
+            String(item.codigo) === String(b.departamento)
+        );
+
+        valorA = departamentoA?.descricao || "";
+        valorB = departamentoB?.descricao || "";
+      }
+
+      if (
+        colunaOrdenacao === "custo" ||
+        colunaOrdenacao === "preco_venda" ||
+        colunaOrdenacao === "estoque"
+      ) {
+        valorA = Number(valorA);
+        valorB = Number(valorB);
+      }
+
+      if (typeof valorA === "string") {
+        valorA = valorA.toLowerCase();
+        valorB = valorB.toLowerCase();
+      }
+
+      if (valorA < valorB) {
+        return ordem === "asc" ? -1 : 1;
+      }
+
+      if (valorA > valorB) {
+        return ordem === "asc" ? 1 : -1;
+      }
+
+      return 0;
+    });
+  }
+
+  function alterarOrdenacao(coluna) {
+    if (colunaOrdenacao === coluna) {
+      setOrdem(
+        ordem === "asc"
+          ? "desc"
+          : "asc"
+      );
+    } else {
+      setColunaOrdenacao(coluna);
+      setOrdem("asc");
+    }
   }
 
   return (
@@ -245,28 +307,85 @@ export default function Produtos() {
 
               <TableRow>
 
-                <TableCell>
-                  <strong>Código</strong>
+                <TableCell
+                  onClick={() => alterarOrdenacao("codigo")}
+                  sx={{ cursor: "pointer" }}
+                >
+                  <strong>
+                    Código{" "}
+                    {colunaOrdenacao === "codigo" &&
+                      (ordem === "asc" ? "↑" : "↓")}
+                  </strong>
                 </TableCell>
 
-                <TableCell>
-                  <strong>Descrição</strong>
+                <TableCell
+                  onClick={() => alterarOrdenacao("descricao")}
+                  sx={{ cursor: "pointer" }}
+                >
+                  <strong>
+                    Descrição{" "}
+                    {colunaOrdenacao === "descricao" &&
+                      (ordem === "asc" ? "↑" : "↓")}
+                  </strong>
                 </TableCell>
 
-                <TableCell>
-                  <strong>Departamento</strong>
+                <TableCell
+                  onClick={() => alterarOrdenacao("departamento")}
+                  sx={{ cursor: "pointer" }}
+                >
+                  <strong>
+                    Departamento{" "}
+                    {colunaOrdenacao === "departamento" &&
+                      (ordem === "asc" ? "↑" : "↓")}
+                  </strong>
                 </TableCell>
 
-                <TableCell align="right">
-                  <strong>Custo</strong>
+                <TableCell
+                  align="right"
+                  onClick={() => alterarOrdenacao("custo")}
+                  sx={{ cursor: "pointer" }}
+                >
+                  <strong>
+                    Custo{" "}
+                    {colunaOrdenacao === "custo" &&
+                      (ordem === "asc" ? "↑" : "↓")}
+                  </strong>
                 </TableCell>
 
-                <TableCell align="right">
-                  <strong>Preço Venda</strong>
+                <TableCell
+                  align="right"
+                  onClick={() => alterarOrdenacao("preco_venda")}
+                  sx={{ cursor: "pointer" }}
+                >
+                  <strong>
+                    Preço Venda{" "}
+                    {colunaOrdenacao === "preco_venda" &&
+                      (ordem === "asc" ? "↑" : "↓")}
+                  </strong>
                 </TableCell>
 
-                <TableCell align="right">
-                  <strong>Estoque</strong>
+                <TableCell
+                  align="right"
+                  onClick={() => alterarOrdenacao("estoque")}
+                  sx={{ cursor: "pointer" }}
+                >
+                  <strong>
+                    Estoque{" "}
+                    {colunaOrdenacao === "estoque" &&
+                      (ordem === "asc" ? "↑" : "↓")}
+                  </strong>
+                </TableCell>
+
+                <TableCell
+                  align="center"
+                  onClick={() => alterarOrdenacao("status")}
+                  sx={{ cursor: "pointer" }}
+                >
+                  <strong>
+                    Status{" "}
+                    {colunaOrdenacao === "status" &&
+                      (ordem === "asc" ? "↑" : "↓")}
+                  </strong>
                 </TableCell>
 
               </TableRow>
@@ -280,7 +399,7 @@ export default function Produtos() {
                 <TableRow>
 
                   <TableCell
-                    colSpan={6}
+                    colSpan={7}
                     align="center"
                   >
 
@@ -297,7 +416,7 @@ export default function Produtos() {
                 <TableRow>
 
                   <TableCell
-                    colSpan={6}
+                    colSpan={7}
                     align="center"
                   >
 
@@ -309,7 +428,7 @@ export default function Produtos() {
 
               ) : (
 
-                produtos.map((produto) => (
+                ordenarProdutos(produtos).map((produto) => (
 
                   <TableRow
                     key={produto.id}
@@ -351,6 +470,29 @@ export default function Produtos() {
                           minimumFractionDigits: 3,
                         }
                       )}
+                    </TableCell>
+                    <TableCell align="center">
+                      <Chip
+                        label={
+                          produto.status === 0
+                            ? "Liberado para venda"
+                            : produto.status === 1
+                            ? "Bloqueado para compra"
+                            : produto.status === 2
+                            ? "Bloqueado para venda/PDV"
+                            : produto.status === 3
+                            ? "Produto excluído"
+                            : "Status desconhecido"
+                        }
+                        size="small"
+                        color={
+                          produto.status === 0
+                            ? "success"
+                            : produto.status === 3
+                            ? "error"
+                            : "warning"
+                        }
+                      />
                     </TableCell>
 
                   </TableRow>
