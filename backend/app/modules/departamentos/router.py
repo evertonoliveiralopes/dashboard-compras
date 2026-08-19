@@ -35,7 +35,11 @@ async def importar_departamentos(
             .str.replace("DescriÃ§Ã£o", "Descrição")
         )
 
-        return service.importar(df, db)
+        return service.importar(
+            df, 
+            db,
+            arquivo.filename,
+            )
 
     except Exception as e:
         raise HTTPException(

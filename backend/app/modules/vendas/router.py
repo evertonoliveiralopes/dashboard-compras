@@ -4,7 +4,7 @@ from .service import faturamento_produtos
 from .filtros_service import listar_lojas
 from datetime import date
 from .departamentos_service import listar_departamentos
-
+from app.models.historico_importacao import HistoricoImportacao
 from app.database import get_db
 from sqlalchemy.orm import Session
 
@@ -28,8 +28,22 @@ async def importar_vendas(
     else:
         df = pd.read_excel(arquivo.file)
 
-    return importar_dataframe(df, db, "LOJA 1")
+    resultado = importar_dataframe(df, db, "LOJA 1", arquivo.filename,)
 
+    historico = HistoricoImportacao(
+        tipo="Vendas",
+        arquivo=arquivo.filename,
+        registros=len(df),
+        inseridos=resultado.get("inseridos", 0),
+        atualizados=resultado.get("atualizados", 0),
+        erros=resultado.get("erros", 0),
+        status="SUCESSO",
+    )
+
+    db.add(historico)
+    db.commit()
+
+    return resultado
 @router.get("/faturamento")
 def obter_faturamento(
     empresa: str | None = None,

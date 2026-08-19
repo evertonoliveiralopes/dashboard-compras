@@ -1,7 +1,7 @@
 import pandas as pd
 from app.utils.codigo_produto import normalizar_codigo_produto
 from datetime import datetime
-
+from app.models.historico_importacao import HistoricoImportacao
 from app.models.venda import Venda
 
 
@@ -55,7 +55,12 @@ def limpar_data(valor):
         return None
 
 
-def importar_dataframe(df: pd.DataFrame, db, empresa: str):
+def importar_dataframe(
+        df: pd.DataFrame,
+        db,
+        empresa: str,
+        nome_arquivo: str,
+    ):
 
     inseridos = 0
 
@@ -115,17 +120,31 @@ def importar_dataframe(df: pd.DataFrame, db, empresa: str):
         inseridos += 1
 
 
-    try:
+        try:
 
+            db.commit()
+
+        except Exception:
+
+            db.rollback()
+            raise
+
+
+        historico = HistoricoImportacao(
+            tipo="Vendas",
+            arquivo=nome_arquivo,
+            registros=len(df),
+            inseridos=inseridos,
+            atualizados=0,
+            erros=0,
+            status="SUCESSO",
+        )
+
+        db.add(historico)
         db.commit()
 
-    except Exception:
 
-        db.rollback()
-        raise
-
-
-    return {
-        "status": "ok",
-        "registros_importados": inseridos
-    }
+        return {
+            "status": "ok",
+            "registros_importados": inseridos
+        }

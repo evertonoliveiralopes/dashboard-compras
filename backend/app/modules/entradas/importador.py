@@ -10,6 +10,7 @@ from app.models.item_entrada import ItemEntrada
 
 from app.utils.codigo_fornecedor import normalizar_codigo_fornecedor
 from app.utils.codigo_produto import normalizar_codigo_produto
+from app.models.historico_importacao import HistoricoImportacao
 
 from app.modules.entradas.repository import (
     buscar_entrada,
@@ -53,16 +54,21 @@ def importar_arquivo(
         "coluna_extra",
         "valor_total",
     ]
+    registros_importados = len(df)
 
     return importar_dataframe(
         df,
         db,
+        arquivo.filename,
+        registros_importados,
     )
 
 
 def importar_dataframe(
     df: pd.DataFrame,
     db: Session,
+    nome_arquivo: str,
+    registros_importados: int,
 ):
 
     df = df[df["codigo_fornecedor"] != "PART."]
@@ -207,7 +213,22 @@ def importar_dataframe(
             )
 
             itens_criados += 1
+    db.commit()
+    
+    historico = HistoricoImportacao(
+        tipo="Entradas",
+        arquivo=nome_arquivo,
+        registros=registros_importados,
+        inseridos=entradas_criadas,
+        atualizados=itens_criados,
+        erros=(
+            fornecedores_nao_encontrados
+            + produtos_nao_encontrados
+        ),
+        status="SUCESSO",
+    )
 
+    db.add(historico)
     db.commit()
 
     return {
