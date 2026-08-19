@@ -22,6 +22,7 @@ import PsychologyIcon from "@mui/icons-material/Psychology";
 import SettingsIcon from "@mui/icons-material/Settings";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { useNavigate, useLocation } from "react-router-dom";
+import FileUploadIcon from "@mui/icons-material/FileUpload";
 
 const drawerWidth = 260;
 
@@ -32,6 +33,7 @@ export default function MainLayout({ children }) {
   const titulos = {
     "/dashboard": "Dashboard",
     "/produtos": "Produtos",
+    "/importacoes": "Importações",
     "/configuracao-alertas": "Configuração de Alertas",
   };
 
@@ -75,6 +77,12 @@ export default function MainLayout({ children }) {
             icon={<Inventory2Icon />}
             text="Produtos"
             onClick={() => navigate("/produtos")}
+          />
+
+          <MenuItem
+            icon={<FileUploadIcon />}
+            text="Importações"
+            onClick={() => navigate("/importacoes")}
           />
 
           <MenuItem

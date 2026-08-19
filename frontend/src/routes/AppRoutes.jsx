@@ -6,6 +6,7 @@ import Dashboard from "../pages/Dashboard/Dashboard";
 import ConfiguracaoAlertas from "../pages/ConfiguracaoAlertas/ConfiguracaoAlertas";
 import MainLayout from "../layouts/MainLayout";
 import Produtos from "../pages/Produtos/Produtos";
+import Importacoes from "../pages/Importacoes/Importacoes";
 
 import PrivateRoute from "./PrivateRoute";
 
@@ -66,7 +67,17 @@ export default function AppRoutes() {
           </PrivateRoute>
         }
       />
-
+      <Route
+        path="/importacoes"
+        element={
+          <PrivateRoute>
+            <MainLayout>
+              <Importacoes />
+            </MainLayout>
+          </PrivateRoute>
+        }
+      />
+      
       {/* Rota não encontrada */}
       <Route
         path="*"
