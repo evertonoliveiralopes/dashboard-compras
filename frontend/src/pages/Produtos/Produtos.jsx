@@ -13,28 +13,43 @@ import {
   TableHead,
   TableRow,
   CircularProgress,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 
 import SearchIcon from "@mui/icons-material/Search";
 
 import { buscarProdutos } from "../../services/produtoService";
+import { buscarDepartamentos } from "../../services/departamentoService";
 
 export default function Produtos() {
   const [produtos, setProdutos] = useState([]);
 
   const [busca, setBusca] = useState("");
-
+  const [departamentos, setDepartamentos] = useState([]);
+  const [departamentoSelecionado, setDepartamentoSelecionado] = useState("");
+  const [statusSelecionado, setStatusSelecionado] = useState("");
   const [carregando, setCarregando] = useState(false);
 
   const [erro, setErro] = useState("");
 
-  async function carregarProdutos() {
+  async function carregarProdutos(
+    filtros = {
+      busca,
+      departamento: departamentoSelecionado,
+      status: statusSelecionado,
+    }
+  ) {
     try {
       setCarregando(true);
       setErro("");
 
       const dados = await buscarProdutos({
-        busca,
+        busca: filtros.busca,
+        departamento: filtros.departamento,
+        status: filtros.status,
         offset: 0,
         limit: 50,
       });
@@ -52,6 +67,16 @@ export default function Produtos() {
   }
 
   useEffect(() => {
+    async function carregarDepartamentos() {
+      try {
+        const dados = await buscarDepartamentos();
+        setDepartamentos(dados);
+      } catch (error) {
+        console.error("Erro ao buscar departamentos:", error);
+      }
+    }
+
+    carregarDepartamentos();
     carregarProdutos();
   }, []);
 
@@ -61,14 +86,6 @@ export default function Produtos() {
 
   return (
     <Box>
-
-      <Typography
-        variant="h5"
-        fontWeight="bold"
-        sx={{ mb: 3 }}
-      >
-        Produtos
-      </Typography>
 
       <Paper
         elevation={2}
@@ -102,6 +119,61 @@ export default function Produtos() {
             }}
           />
 
+          <FormControl
+            size="small"
+            sx={{ minWidth: 250 }}
+          >
+            <InputLabel>Departamento</InputLabel>
+
+            <Select
+              value={departamentoSelecionado}
+              label="Departamento"
+              onChange={(event) =>
+                setDepartamentoSelecionado(event.target.value)
+              }
+            >
+              <MenuItem value="">
+                Todos os departamentos
+              </MenuItem>
+
+              {departamentos.map((departamento) => (
+                <MenuItem
+                  key={departamento.id}
+                  value={departamento.id}
+                >
+                  {departamento.descricao}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <FormControl
+            size="small"
+            sx={{ minWidth: 180 }}
+          >
+            <InputLabel>Status</InputLabel>
+
+            <Select
+              value={statusSelecionado}
+              label="Status"
+              onChange={(event) =>
+                setStatusSelecionado(event.target.value)
+              }
+            >
+              <MenuItem value="">
+                Todos
+              </MenuItem>
+
+              <MenuItem value="1">
+                Ativo
+              </MenuItem>
+
+              <MenuItem value="0">
+                Inativo
+              </MenuItem>
+            </Select>
+          </FormControl>
+
           <Button
             variant="contained"
             startIcon={<SearchIcon />}
@@ -112,6 +184,27 @@ export default function Produtos() {
             }}
           >
             Buscar
+          </Button>
+
+          <Button
+            variant="outlined"
+            onClick={() => {
+              setBusca("");
+              setDepartamentoSelecionado("");
+              setStatusSelecionado("");
+
+              carregarProdutos({
+                busca: "",
+                departamento: "",
+                status: "",
+              });
+            }}
+            sx={{
+              height: 40,
+              minWidth: 120,
+            }}
+          >
+            Limpar
           </Button>
 
         </Box>

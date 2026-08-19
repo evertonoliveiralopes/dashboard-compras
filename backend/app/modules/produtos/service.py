@@ -61,6 +61,7 @@ class ProdutoService:
         db: Session,
         busca: str | None = None,
         departamento: str | None = None,
+        status: int | None = None,
         offset: int = 0,
         limit: int = 50,
     ):
@@ -69,6 +70,7 @@ class ProdutoService:
             db=db,
             busca=busca,
             departamento=departamento,
+            status=status,
             offset=offset,
             limit=limit,
         )

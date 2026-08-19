@@ -16,6 +16,7 @@ def listar_produtos(
     db: Session,
     busca: str | None = None,
     departamento: str | None = None,
+    status: int | None = None,
     offset: int = 0,
     limit: int = 50,
 ):
@@ -31,6 +32,11 @@ def listar_produtos(
     if departamento:
         query = query.filter(
             Produto.departamento == departamento
+        )
+
+    if status is not None:
+        query = query.filter(
+            Produto.status == status
         )
 
     return (

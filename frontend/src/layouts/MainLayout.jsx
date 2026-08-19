@@ -21,12 +21,21 @@ import AnalyticsIcon from "@mui/icons-material/Analytics";
 import PsychologyIcon from "@mui/icons-material/Psychology";
 import SettingsIcon from "@mui/icons-material/Settings";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const drawerWidth = 260;
 
 export default function MainLayout({ children }) {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const titulos = {
+    "/dashboard": "Dashboard",
+    "/produtos": "Produtos",
+    "/configuracao-alertas": "Configuração de Alertas",
+  };
+
+  const tituloPagina = titulos[location.pathname] || "Compra360";
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -86,6 +95,7 @@ export default function MainLayout({ children }) {
           <MenuItem
             icon={<SettingsIcon />}
             text="Configurações"
+            onClick={() => navigate("/configuracao-alertas")}
           />
         </List>
       </Drawer>
@@ -103,8 +113,8 @@ export default function MainLayout({ children }) {
               justifyContent: "space-between",
             }}
           >
-            <Typography variant="h6">
-              Dashboard
+            <Typography variant="h6" fontWeight="600">
+              {tituloPagina}
             </Typography>
 
             <Box

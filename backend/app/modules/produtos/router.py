@@ -51,6 +51,9 @@ def listar_produtos(
     departamento: str | None = Query(
         default=None
     ),
+    status: int | None = Query(
+        default=None
+    ),
     offset: int = Query(
         default=0,
         ge=0
@@ -67,6 +70,7 @@ def listar_produtos(
         db=db,
         busca=busca,
         departamento=departamento,
+        status=status,
         offset=offset,
         limit=limit,
     )
