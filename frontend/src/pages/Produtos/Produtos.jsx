@@ -83,6 +83,13 @@ export default function Produtos() {
   function handleBuscar() {
     carregarProdutos();
   }
+  function obterDescricaoDepartamento(codigo) {
+    const departamento = departamentos.find(
+      (item) => String(item.codigo) === String(codigo)
+    );
+
+    return departamento?.descricao || codigo;
+  }
 
   return (
     <Box>
@@ -139,7 +146,7 @@ export default function Produtos() {
               {departamentos.map((departamento) => (
                 <MenuItem
                   key={departamento.id}
-                  value={departamento.id}
+                  value={departamento.codigo}
                 >
                   {departamento.descricao}
                 </MenuItem>
@@ -161,15 +168,23 @@ export default function Produtos() {
               }
             >
               <MenuItem value="">
-                Todos
-              </MenuItem>
-
-              <MenuItem value="1">
-                Ativo
+                Todos os status
               </MenuItem>
 
               <MenuItem value="0">
-                Inativo
+                Liberado para venda
+              </MenuItem>
+
+              <MenuItem value="1">
+                Bloqueado para compra
+              </MenuItem>
+
+              <MenuItem value="2">
+                Bloqueado para venda PDV
+              </MenuItem>
+
+              <MenuItem value="3">
+                Produto excluído
               </MenuItem>
             </Select>
           </FormControl>
@@ -310,7 +325,7 @@ export default function Produtos() {
                     </TableCell>
 
                     <TableCell>
-                      {produto.departamento}
+                      {obterDescricaoDepartamento(produto.departamento)}
                     </TableCell>
 
                     <TableCell align="right">
