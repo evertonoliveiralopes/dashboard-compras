@@ -31,3 +31,9 @@ class Usuario(Base):
         back_populates="usuario",
         cascade="all, delete-orphan",
     )
+    config_tipo_alerta = relationship(
+        "ConfigTipoAlerta",
+        back_populates="usuario",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )

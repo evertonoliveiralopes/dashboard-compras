@@ -18,3 +18,22 @@ export async function salvarConfiguracoesAlertas(
 
   return response.data;
 }
+
+export async function buscarTiposAlertas() {
+  const response = await api.get(
+    "/config-alertas/tipos"
+  );
+
+  return response.data;
+}
+
+export async function salvarTiposAlertas(
+  configuracao
+) {
+  const response = await api.post(
+    "/config-alertas/tipos",
+    configuracao
+  );
+
+  return response.data;
+}

@@ -13,15 +13,17 @@ import {
   Box,
 } from "@mui/material";
 
+import { buscarConfiguracoesAlertas, salvarConfiguracoesAlertas, buscarTiposAlertas, salvarTiposAlertas,} from "../../services/configAlertaService";
 import { useEffect, useState } from "react";
 import { buscarDepartamentos } from "../../services/departamentoService";
-import { buscarConfiguracoesAlertas,  salvarConfiguracoesAlertas } from "../../services/configAlertaService";
+
 import { buscarUsuarioAtual } from "../../services/authService";
 
 export default function ConfiguracaoAlertas() {
   const [departamentos, setDepartamentos] = useState([]);
   const [departamentosSelecionados, setDepartamentosSelecionados] = useState([]);
   const [usuario, setUsuario] = useState(null);
+  const [tiposAlertas, setTiposAlertas] = useState({  alteracao_preco: true,  estoque_minimo: false,  sem_movimentacao: true,});
 
  useEffect(() => {
     async function carregarTela() {
@@ -30,13 +32,15 @@ export default function ConfiguracaoAlertas() {
 
         setUsuario(usuarioAtual);
 
-        const [listaDepartamentos, configuracoes] =
+        const [listaDepartamentos, configuracoes, configuracaoTipos,] =
           await Promise.all([
             buscarDepartamentos(),
             buscarConfiguracoesAlertas(),
+            buscarTiposAlertas(),
           ]);
 
         setDepartamentos(listaDepartamentos);
+        setTiposAlertas(configuracaoTipos);
 
         const selecionados = configuracoes
           .filter((item) => item.ativo)
@@ -88,6 +92,10 @@ export default function ConfiguracaoAlertas() {
 
       await salvarConfiguracoesAlertas(
         payload
+      );
+
+      await salvarTiposAlertas(
+        tiposAlertas
       );
 
       alert("Configurações salvas com sucesso!");
@@ -159,7 +167,15 @@ export default function ConfiguracaoAlertas() {
                 }}
               >
                 <FormControlLabel
-                  control={<Switch defaultChecked />}
+                  control={<Switch
+                              checked={tiposAlertas.alteracao_preco}
+                              onChange={(event) =>
+                                setTiposAlertas({
+                                  ...tiposAlertas,
+                                  alteracao_preco: event.target.checked,
+                                })
+                              }
+                            />}
                   label="Alteração de preço de compra"
                   sx={{ m: 0 }}
                 />
@@ -186,7 +202,15 @@ export default function ConfiguracaoAlertas() {
                 }}
               >
                 <FormControlLabel
-                  control={<Switch />}
+                  control={<Switch
+                              checked={tiposAlertas.estoque_minimo}
+                              onChange={(event) =>
+                                setTiposAlertas({
+                                  ...tiposAlertas,
+                                  estoque_minimo: event.target.checked,
+                                })
+                              }
+                            />}
                   label="Estoque abaixo do mínimo"
                   sx={{ m: 0 }}
                 />
@@ -213,7 +237,15 @@ export default function ConfiguracaoAlertas() {
                 }}
               >
                 <FormControlLabel
-                  control={<Switch defaultChecked />}
+                  control={<Switch
+                              checked={tiposAlertas.sem_movimentacao}
+                              onChange={(event) =>
+                                setTiposAlertas({
+                                  ...tiposAlertas,
+                                  sem_movimentacao: event.target.checked,
+                                })
+                              }
+                            />}
                   label="Produto sem movimentação"
                   sx={{ m: 0 }}
                 />

@@ -9,3 +9,4 @@ from app.models.venda import Venda
 from app.models.usuario import Usuario
 from app.models.departamento import Departamento
 from .config_alerta import ConfigAlerta
+from .config_tipo_alerta import ConfigTipoAlerta
