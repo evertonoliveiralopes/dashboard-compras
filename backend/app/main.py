@@ -20,6 +20,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
+        "https://compra360-frontend-56786735553.southamerica-east1.run.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
