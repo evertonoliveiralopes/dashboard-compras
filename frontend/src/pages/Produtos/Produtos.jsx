@@ -177,6 +177,7 @@ export default function Produtos() {
             display: "flex",
             gap: 2,
             alignItems: "center",
+            flexWrap: "wrap",
           }}
         >
 
@@ -198,7 +199,7 @@ export default function Produtos() {
 
           <FormControl
             size="small"
-            sx={{ minWidth: 250 }}
+            sx={{ minWidth: { xs: "100%", sm: 250 }, flex: { sm: 1 }, }}
           >
             <InputLabel>Departamento</InputLabel>
 
@@ -226,7 +227,7 @@ export default function Produtos() {
 
           <FormControl
             size="small"
-            sx={{ minWidth: 180 }}
+            sx={{ minWidth: { xs: "100%", sm: 180 }, flex: { sm: 1 }, }}
           >
             <InputLabel>Status</InputLabel>
 
@@ -265,7 +266,7 @@ export default function Produtos() {
             onClick={handleBuscar}
             sx={{
               height: 40,
-              minWidth: 120,
+              minWidth: { xs: 0, sm: 120 }, flex: { xs: 1, sm: "initial" }, 
             }}
           >
             Buscar
@@ -291,7 +292,7 @@ export default function Produtos() {
             }}
             sx={{
               height: 40,
-              minWidth: 120,
+              minWidth: { xs: 0, sm: 120 }, flex: { xs: 1, sm: "initial" },
             }}
           >
             Limpar

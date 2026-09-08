@@ -32,6 +32,12 @@ class ConfigAlerta(Base):
         nullable=False,
     )
 
+    loja_id = Column(
+        Integer,
+        ForeignKey("lojas.id"),
+        nullable=True,
+    )
+
     ativo = Column(
         Boolean,
         default=True,
@@ -45,5 +51,9 @@ class ConfigAlerta(Base):
 
     departamento = relationship(
         "Departamento",
+        back_populates="config_alertas",
+    )
+    loja = relationship(
+        "Loja",
         back_populates="config_alertas",
     )

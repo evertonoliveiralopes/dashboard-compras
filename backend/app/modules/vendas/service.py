@@ -4,7 +4,7 @@ from app.models.venda import Venda
 
 def faturamento_produtos(
     db,
-    empresa=None,
+    loja_id=None,
     data_inicio=None,
     data_fim=None,
     limit=50,
@@ -17,9 +17,9 @@ def faturamento_produtos(
         func.sum(Venda.quantidade).label("quantidade"),
     )
 
-    if empresa:
+    if loja_id:
         query = query.filter(
-            func.upper(Venda.empresa) == empresa.upper()
+            Venda.loja_id == loja_id
         )
 
     if data_inicio:

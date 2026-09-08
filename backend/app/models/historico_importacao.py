@@ -1,5 +1,7 @@
-from sqlalchemy import Column, DateTime, Integer, String
+from sqlalchemy import Column, DateTime, Integer, String, ForeignKey
 from sqlalchemy.sql import func
+
+from sqlalchemy.orm import relationship
 
 from app.database import Base
 
@@ -10,6 +12,8 @@ class HistoricoImportacao(Base):
     id = Column(Integer, primary_key=True, index=True)
 
     tipo = Column(String(50), nullable=False)
+
+    loja_id = Column(Integer, ForeignKey("lojas.id"), nullable=True)
 
     arquivo = Column(String(200), nullable=False)
 
@@ -24,3 +28,8 @@ class HistoricoImportacao(Base):
     status = Column(String(30), default="SUCESSO")
 
     criado_em = Column(DateTime(timezone=True), server_default=func.now())
+
+    loja = relationship(
+        "Loja",
+        back_populates="historico_importacoes"
+    )

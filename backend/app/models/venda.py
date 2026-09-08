@@ -1,4 +1,6 @@
-from sqlalchemy import Column, Integer, String, Numeric, Date
+from sqlalchemy import Column, Integer, String, Numeric, Date, ForeignKey
+
+from sqlalchemy.orm import relationship
 
 from app.database import Base
 
@@ -31,3 +33,7 @@ class Venda(Base):
     custo_total = Column(Numeric(14, 2))
 
     margem = Column(Numeric(10, 2))
+
+    loja_id = Column(Integer, ForeignKey("lojas.id"), nullable=True)
+
+    loja = relationship("Loja", back_populates="vendas")

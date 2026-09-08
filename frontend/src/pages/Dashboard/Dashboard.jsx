@@ -8,6 +8,10 @@ import { Typography } from "@mui/material";
 import { buscarIndicadores } from "../../services/dashboardService";
 
 export default function Dashboard() {
+  const lojaSelecionada = JSON.parse(
+    localStorage.getItem("lojaSelecionada")
+  );
+
   const [indicadores, setIndicadores] = useState({
     compras: 0,
     produtos: 0,
@@ -20,7 +24,9 @@ export default function Dashboard() {
   useEffect(() => {
     async function carregar() {
       try {
-        const dados = await buscarIndicadores();
+        const dados = await buscarIndicadores(
+          lojaSelecionada?.id
+        );
 
         console.log("Indicadores:", dados);
 

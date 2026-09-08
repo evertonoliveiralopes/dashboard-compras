@@ -10,3 +10,4 @@ from app.models.usuario import Usuario
 from app.models.departamento import Departamento
 from .config_alerta import ConfigAlerta
 from .config_tipo_alerta import ConfigTipoAlerta
+from app.models.loja import Loja

@@ -20,13 +20,19 @@ import {
 import { buscarComprasMes } from "../../../services/dashboardChartService";
 
 export default function ComprasMesChart() {
+  const lojaSelecionada = JSON.parse(
+    localStorage.getItem("lojaSelecionada")
+  );
+
   const [dados, setDados] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function carregarDados() {
       try {
-        const response = await buscarComprasMes();
+        const response = await buscarComprasMes(
+          lojaSelecionada?.id
+        );
 
         console.log("Compras por mês:", response);
 

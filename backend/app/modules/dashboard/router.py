@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -13,20 +13,20 @@ service = DashboardService()
 
 
 @router.get("/indicadores")
-def indicadores(db: Session = Depends(get_db)):
-    return service.indicadores(db)
+def indicadores(loja_id: int | None = Query(None), db: Session = Depends(get_db)):
+    return service.indicadores(db, loja_id)
 
 @router.get("/compras-mes")
-def compras_mes(db: Session = Depends(get_db)):
-    return service.compras_por_mes(db)
+def compras_mes(loja_id: int | None = Query(None), db: Session = Depends(get_db)):
+    return service.compras_por_mes(db, loja_id)
 
 @router.get("/top-fornecedores")
-def top_fornecedores(db: Session = Depends(get_db)):
-    return service.top_fornecedores(db)
+def top_fornecedores(loja_id: int | None = Query(None), db: Session = Depends(get_db)):
+    return service.top_fornecedores(db, loja_id)
 
 @router.get("/compras-departamento")
-def compras_por_departamento(db: Session = Depends(get_db)):
-    return service.compras_por_departamento(db)
+def compras_por_departamento(loja_id: int | None = Query(None), db: Session = Depends(get_db)):
+    return service.compras_por_departamento(db, loja_id)
 
 @router.get("/alertas")
 def alertas(db: Session = Depends(get_db)):

@@ -1,12 +1,10 @@
-from sqlalchemy import distinct
-
-from app.models.venda import Venda
+from app.models.loja import Loja
 
 
 def listar_lojas(db):
     return (
-        db.query(Venda.empresa)
-        .distinct()
-        .order_by(Venda.empresa)
+        db.query(Loja)
+        .filter(Loja.ativo.is_(True))
+        .order_by(Loja.id)
         .all()
     )

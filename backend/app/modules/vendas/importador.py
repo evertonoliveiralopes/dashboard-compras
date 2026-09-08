@@ -56,19 +56,18 @@ def limpar_data(valor):
 
 
 def importar_dataframe(
-        df: pd.DataFrame,
-        db,
-        empresa: str,
-        nome_arquivo: str,
-    ):
-
+    df: pd.DataFrame,
+    db,
+    loja_id: int,
+    nome_arquivo: str,
+):
     inseridos = 0
 
     for _, linha in df.iterrows():
 
         venda = Venda(
-
-            empresa=empresa,
+            empresa=f"LOJA {loja_id}",
+            loja_id=loja_id,
 
             data=limpar_data(
                 linha["DATA"]
@@ -116,35 +115,19 @@ def importar_dataframe(
         )
 
         db.add(venda)
-
         inseridos += 1
 
-
-        try:
-
-            db.commit()
-
-        except Exception:
-
-            db.rollback()
-            raise
-
-
-        historico = HistoricoImportacao(
-            tipo="Vendas",
-            arquivo=nome_arquivo,
-            registros=len(df),
-            inseridos=inseridos,
-            atualizados=0,
-            erros=0,
-            status="SUCESSO",
-        )
-
-        db.add(historico)
+    try:
         db.commit()
 
+    except Exception:
+        db.rollback()
+        raise
 
-        return {
-            "status": "ok",
-            "registros_importados": inseridos
-        }
+    return {
+        "status": "ok",
+        "registros_importados": inseridos,
+        "inseridos": inseridos,
+        "atualizados": 0,
+        "erros": 0,
+    }

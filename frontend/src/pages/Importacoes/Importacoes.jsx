@@ -22,6 +22,10 @@ import {
 } from "../../services/importacaoService";
 
 export default function Importacoes() {
+  const lojaSelecionada = JSON.parse(
+    localStorage.getItem("lojaSelecionada")
+  );
+
   const [arquivoProdutos, setArquivoProdutos] = useState(null);
   const [arquivoDepartamentos, setArquivoDepartamentos] = useState(null);
   const [carregandoProdutos, setCarregandoProdutos] = useState(false);
@@ -239,7 +243,8 @@ export default function Importacoes() {
         setResultadoEntradas(null);
 
         const dados = await importarEntradas(
-        arquivoEntradas
+        arquivoEntradas,
+        lojaSelecionada.id
         );
 
         setResultadoEntradas(dados);
@@ -274,7 +279,8 @@ export default function Importacoes() {
         setResultadoVendas(null);
 
         const dados = await importarVendas(
-        arquivoVendas
+        arquivoVendas,
+        lojaSelecionada.id
         );
 
         setResultadoVendas(dados);

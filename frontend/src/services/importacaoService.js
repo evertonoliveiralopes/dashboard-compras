@@ -39,27 +39,33 @@ export async function importarFornecedores(arquivo) {
   return response.data;
 }
 
-export async function importarEntradas(arquivo) {
+export async function importarEntradas(arquivo, lojaId) {
   const formData = new FormData();
 
   formData.append("arquivo", arquivo);
 
   const response = await api.post(
     "/entradas/importar",
-    formData
+    formData,
+    {
+      params: { loja_id: lojaId },
+    }
   );
 
   return response.data;
 }
 
-export async function importarVendas(arquivo) {
+export async function importarVendas(arquivo, lojaId) {
   const formData = new FormData();
 
   formData.append("arquivo", arquivo);
 
   const response = await api.post(
     "/vendas/importar",
-    formData
+    formData,
+    {
+      params: { loja_id: lojaId },
+    }
   );
 
   return response.data;

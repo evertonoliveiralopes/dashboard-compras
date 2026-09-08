@@ -11,6 +11,8 @@ class Entrada(Base):
 
     empresa = Column(Integer)
 
+    loja_id = Column(Integer, ForeignKey("lojas.id"), nullable=True)
+
     data_entrada = Column(Date)
 
     fornecedor_id = Column(Integer, ForeignKey("fornecedores.id"))
@@ -24,6 +26,12 @@ class Entrada(Base):
     processo_entrada = Column(String)
 
     tipo_movimento = Column(String)
+
+
+    loja = relationship(
+        "Loja",
+        back_populates="entradas"
+    )
 
 
     fornecedor = relationship(

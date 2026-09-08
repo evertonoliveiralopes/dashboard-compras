@@ -21,6 +21,10 @@ import { buscarComprasDepartamento } from "../../../services/dashboardChartServi
 
 
 export default function ComprasDepartamentoChart() {
+  const lojaSelecionada = JSON.parse(
+    localStorage.getItem("lojaSelecionada")
+  );
+
   const [dados, setDados] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -28,7 +32,9 @@ export default function ComprasDepartamentoChart() {
   useEffect(() => {
     async function carregarDados() {
       try {
-        const response = await buscarComprasDepartamento();
+        const response = await buscarComprasDepartamento(
+          lojaSelecionada?.id
+        );
 
         console.log(
           "Compras por departamento:",

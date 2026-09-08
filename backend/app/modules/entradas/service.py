@@ -2,9 +2,12 @@ from app.modules.entradas.repository import listar_entradas
 from app.modules.entradas.repository import buscar_entrada_por_id
 
 
-def listar_entradas_service(db):
+def listar_entradas_service(db, loja_id=None):
 
-    entradas = listar_entradas(db)
+    entradas = listar_entradas(
+        db,
+        loja_id,
+    )
 
     resultado = []
 
@@ -27,14 +30,17 @@ def listar_entradas_service(db):
 
     return resultado
 
+
 def detalhar_entrada_service(
     db,
     entrada_id: int,
+    loja_id=None,
 ):
 
     entrada = buscar_entrada_por_id(
         db,
-        entrada_id
+        entrada_id,
+        loja_id,
     )
 
     if entrada is None:
@@ -43,9 +49,9 @@ def detalhar_entrada_service(
     itens = []
 
     valor_total = 0
-    
+
     print("Quantidade de itens:", len(entrada.itens))
-    
+
     for item in entrada.itens:
 
         subtotal = item.quantidade * item.custo

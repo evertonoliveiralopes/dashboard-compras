@@ -25,6 +25,7 @@ from app.modules.entradas.repository import (
 def importar_arquivo(
     arquivo: UploadFile,
     db: Session,
+    loja_id: int,
 ):
 
     df = pd.read_csv(
@@ -61,6 +62,7 @@ def importar_arquivo(
         db,
         arquivo.filename,
         registros_importados,
+        loja_id,
     )
 
 
@@ -69,6 +71,7 @@ def importar_dataframe(
     db: Session,
     nome_arquivo: str,
     registros_importados: int,
+    loja_id: int,
 ):
 
     df = df[df["codigo_fornecedor"] != "PART."]
@@ -145,7 +148,7 @@ def importar_dataframe(
 
         entrada = buscar_entrada(
             db=db,
-            empresa=1,
+            loja_id=loja_id,
             nota_fiscal=str(linha["nota_fiscal"]),
             fornecedor_id=fornecedor.id,
         )
@@ -153,7 +156,8 @@ def importar_dataframe(
         if entrada is None:
 
             entrada = Entrada(
-                empresa=1,
+                empresa=loja_id,
+                loja_id=loja_id,
                 nota_fiscal=str(linha["nota_fiscal"]),
                 data_entrada=data_entrada,
                 fornecedor_id=fornecedor.id,
@@ -217,6 +221,7 @@ def importar_dataframe(
     
     historico = HistoricoImportacao(
         tipo="Entradas",
+        loja_id=loja_id,
         arquivo=nome_arquivo,
         registros=registros_importados,
         inseridos=entradas_criadas,

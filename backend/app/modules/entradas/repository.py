@@ -6,7 +6,7 @@ from app.models.item_entrada import ItemEntrada
 
 def buscar_entrada(
     db: Session,
-    empresa,
+    loja_id,
     nota_fiscal,
     fornecedor_id
 ):
@@ -14,7 +14,7 @@ def buscar_entrada(
     return (
         db.query(Entrada)
         .filter(
-            Entrada.empresa == empresa,
+            Entrada.loja_id == loja_id,
             Entrada.nota_fiscal == nota_fiscal,
             Entrada.fornecedor_id == fornecedor_id
         )
@@ -85,15 +85,22 @@ def criar_item_entrada(
 
 def listar_entradas(
     db: Session,
+    loja_id=None,
 ):
-    return (
+    query = (
         db.query(Entrada)
         .order_by(
             Entrada.data_entrada.desc(),
             Entrada.id.desc()
         )
-        .all()
     )
+
+    if loja_id:
+        query = query.filter(
+            Entrada.loja_id == loja_id
+        )
+
+    return query.all()
     
 from sqlalchemy.orm import joinedload
 
@@ -101,8 +108,9 @@ from sqlalchemy.orm import joinedload
 def buscar_entrada_por_id(
     db: Session,
     entrada_id: int,
+    loja_id=None,
 ):
-    return (
+    query = (
         db.query(Entrada)
         .options(
             joinedload(Entrada.fornecedor),
@@ -111,5 +119,11 @@ def buscar_entrada_por_id(
         .filter(
             Entrada.id == entrada_id
         )
-        .first()
     )
+
+    if loja_id:
+        query = query.filter(
+            Entrada.loja_id == loja_id
+        )
+
+    return query.first()

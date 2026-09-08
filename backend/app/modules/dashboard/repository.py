@@ -17,11 +17,24 @@ class DashboardRepository:
     def total_fornecedores(self, db: Session):
         return db.query(Fornecedor).count()
 
-    def total_compras(self, db: Session):
-        return db.query(ItemEntrada).count()
+    def total_compras(self, db: Session, loja_id=None):
+        query = (
+            db.query(ItemEntrada)
+            .join(
+                Entrada,
+                Entrada.id == ItemEntrada.entrada_id,
+            )
+        )
 
-    def compras_por_mes(self, db: Session):
-        resultado = (
+        if loja_id:
+            query = query.filter(
+                Entrada.loja_id == loja_id
+            )
+
+        return query.count()
+
+    def compras_por_mes(self, db: Session, loja_id=None):
+        query = (
             db.query(
                 func.to_char(
                     Entrada.data_entrada,
@@ -35,6 +48,15 @@ class DashboardRepository:
                 ItemEntrada,
                 Entrada.id == ItemEntrada.entrada_id,
             )
+        )
+
+        if loja_id:
+            query = query.filter(
+                Entrada.loja_id == loja_id
+            )
+
+        resultado = (
+            query
             .group_by(
                 func.to_char(
                     Entrada.data_entrada,
@@ -75,9 +97,9 @@ class DashboardRepository:
             }
             for mes, valor in meses.items()
         ]
-        
-    def top_fornecedores(self, db: Session):
-        resultado = (
+
+    def top_fornecedores(self, db: Session, loja_id=None):
+        query = (
             db.query(
                 Fornecedor.nome_fantasia.label("fornecedor"),
                 func.sum(
@@ -92,6 +114,15 @@ class DashboardRepository:
                 ItemEntrada,
                 Entrada.id == ItemEntrada.entrada_id,
             )
+        )
+
+        if loja_id:
+            query = query.filter(
+                Entrada.loja_id == loja_id
+            )
+
+        resultado = (
+            query
             .group_by(
                 Fornecedor.nome_fantasia
             )
@@ -111,9 +142,9 @@ class DashboardRepository:
             }
             for linha in resultado
         ]
-    def compras_por_departamento(self, db: Session):
 
-        resultado = (
+    def compras_por_departamento(self, db: Session, loja_id=None):
+        query = (
             db.query(
                 Departamento.descricao.label("departamento"),
                 func.sum(
@@ -128,6 +159,19 @@ class DashboardRepository:
                 ItemEntrada,
                 ItemEntrada.produto_id == Produto.id,
             )
+            .join(
+                Entrada,
+                Entrada.id == ItemEntrada.entrada_id,
+            )
+        )
+
+        if loja_id:
+            query = query.filter(
+                Entrada.loja_id == loja_id
+            )
+
+        resultado = (
+            query
             .group_by(
                 Departamento.descricao
             )
@@ -146,6 +190,7 @@ class DashboardRepository:
             }
             for linha in resultado
         ]
+
     def alertas(self, db: Session):
 
         alertas = []

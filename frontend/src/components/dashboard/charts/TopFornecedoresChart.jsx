@@ -21,13 +21,19 @@ import { buscarTopFornecedores } from "../../../services/dashboardChartService";
 
 
 export default function TopFornecedoresChart() {
+  const lojaSelecionada = JSON.parse(
+    localStorage.getItem("lojaSelecionada")
+  );
+
   const [dados, setDados] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function carregarDados() {
       try {
-        const response = await buscarTopFornecedores();
+        const response = await buscarTopFornecedores(
+          lojaSelecionada?.id
+        );
 
         console.log("Top fornecedores:", response);
 
