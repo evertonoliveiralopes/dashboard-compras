@@ -2,6 +2,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.produto import Produto
+from app.models.produto_loja import ProdutoLoja
 from app.models.fornecedor import Fornecedor
 from app.models.item_entrada import ItemEntrada
 from app.models.entrada import Entrada
@@ -191,15 +192,28 @@ class DashboardRepository:
             for linha in resultado
         ]
 
-    def alertas(self, db: Session):
+    def alertas(self, db: Session, loja_id=None):
 
         alertas = []
 
-        produtos_sem_estoque = (
+        produtos_sem_estoque_query = (
             db.query(Produto)
-            .filter(
-                Produto.estoque <= 0
+            .join(
+                ProdutoLoja,
+                Produto.id == ProdutoLoja.produto_id,
             )
+            .filter(
+                ProdutoLoja.estoque_atual <= 0
+            )
+        )
+
+        if loja_id:
+            produtos_sem_estoque_query = produtos_sem_estoque_query.filter(
+                ProdutoLoja.loja_id == loja_id
+            )
+
+        produtos_sem_estoque = (
+            produtos_sem_estoque_query
             .limit(10)
             .all()
         )
@@ -213,12 +227,24 @@ class DashboardRepository:
                 }
             )
 
+        produtos_sem_custo_query = (
+            db.query(Produto)
+            .join(
+                ProdutoLoja,
+                Produto.id == ProdutoLoja.produto_id,
+            )
+            .filter(
+                ProdutoLoja.custo <= 0
+            )
+        )
+
+        if loja_id:
+            produtos_sem_custo_query = produtos_sem_custo_query.filter(
+                ProdutoLoja.loja_id == loja_id
+            )
 
         produtos_sem_custo = (
-            db.query(Produto)
-            .filter(
-                Produto.custo <= 0
-            )
+            produtos_sem_custo_query
             .limit(10)
             .all()
         )
@@ -232,16 +258,37 @@ class DashboardRepository:
                 }
             )
 
-
-        produtos_sem_movimento = (
+        produtos_sem_movimento_query = (
             db.query(Produto)
+            .join(
+                ProdutoLoja,
+                Produto.id == ProdutoLoja.produto_id,
+            )
             .outerjoin(
                 ItemEntrada,
-                Produto.id == ItemEntrada.produto_id
+                Produto.id == ItemEntrada.produto_id,
+            )
+            .outerjoin(
+                Entrada,
+                (ItemEntrada.entrada_id == Entrada.id)
+                & (
+                    (Entrada.loja_id == loja_id)
+                    if loja_id
+                    else True
+                ),
             )
             .filter(
-                ItemEntrada.id == None
+                Entrada.id == None
             )
+        )
+
+        if loja_id:
+            produtos_sem_movimento_query = produtos_sem_movimento_query.filter(
+                ProdutoLoja.loja_id == loja_id
+            )
+
+        produtos_sem_movimento = (
+            produtos_sem_movimento_query
             .limit(10)
             .all()
         )
@@ -255,11 +302,20 @@ class DashboardRepository:
                 }
             )
 
-
         return alertas
-    def ultimas_importacoes(self, db: Session):
-        resultado = (
+
+    def ultimas_importacoes(self, db: Session, loja_id=None):
+        query = (
             db.query(HistoricoImportacao)
+        )
+
+        if loja_id:
+            query = query.filter(
+                HistoricoImportacao.loja_id == loja_id
+            )
+
+        resultado = (
+            query
             .order_by(
                 HistoricoImportacao.criado_em.desc()
             )
@@ -280,12 +336,24 @@ class DashboardRepository:
             }
             for item in resultado
         ]
-    def total_valor_estoque(self, db: Session):
-        resultado = (
+    def total_valor_estoque(self, db: Session, loja_id=None):
+        query = (
             db.query(
                 func.coalesce(
-                    func.sum(Produto.estoque * Produto.custo), 0
+                    func.sum(
+                        ProdutoLoja.estoque_atual
+                        * ProdutoLoja.custo
+                    ),
+                    0,
                 )
-            ).scalar()
+            )
         )
+
+        if loja_id:
+            query = query.filter(
+                ProdutoLoja.loja_id == loja_id
+            )
+
+        resultado = query.scalar()
+
         return float(resultado)

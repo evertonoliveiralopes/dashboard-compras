@@ -6,11 +6,16 @@ export async function buscarProdutos({
   status = "",
   offset = 0,
   limit = 50,
+  lojaId = null,
 } = {}) {
   const params = {
     offset,
     limit,
   };
+
+  if (lojaId) {
+    params.loja_id = lojaId;
+  }
 
   if (busca) {
     params.busca = busca;

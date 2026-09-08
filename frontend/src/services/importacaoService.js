@@ -1,13 +1,16 @@
 import api from "./api";
 
-export async function importarProdutos(arquivo) {
+export async function importarProdutos(arquivo, lojaId) {
   const formData = new FormData();
 
   formData.append("arquivo", arquivo);
 
   const response = await api.post(
     "/produtos/importar",
-    formData
+    formData,
+    {
+      params: { loja_id: lojaId },
+    }
   );
 
   return response.data;

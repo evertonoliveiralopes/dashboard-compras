@@ -11,7 +11,7 @@ from app.models.historico_importacao import HistoricoImportacao
 
 class ProdutoService:
 
-    def importar(self, arquivo: UploadFile, db: Session):
+    def importar(self, arquivo: UploadFile, db: Session, loja_id: int):
 
         if arquivo.filename.lower().endswith(".csv"):
 
@@ -40,9 +40,10 @@ class ProdutoService:
 
             df = pd.read_excel(arquivo.file)
 
-        resultado = importar_dataframe(df, db)
+        resultado = importar_dataframe(df, db, loja_id)
         historico = HistoricoImportacao(
             tipo="Produtos",
+            loja_id=loja_id,
             arquivo=arquivo.filename,
             registros=len(df),
             inseridos=resultado["inseridos"],
@@ -64,6 +65,7 @@ class ProdutoService:
         status: int | None = None,
         offset: int = 0,
         limit: int = 50,
+        loja_id: int | None = None,
     ):
 
         return repository.listar_produtos(
@@ -73,4 +75,5 @@ class ProdutoService:
             status=status,
             offset=offset,
             limit=limit,
+            loja_id=loja_id,
         )

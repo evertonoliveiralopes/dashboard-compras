@@ -1,12 +1,16 @@
 import pandas as pd
 from sqlalchemy.orm import Session
+
+from sqlalchemy.dialects.postgresql import insert
+
 from app.utils.codigo_produto import normalizar_codigo_produto
 from app.utils.normalizar_codigo import normalizar_codigo
 
 from app.models.produto import Produto
+from app.models.produto_loja import ProdutoLoja
+
 
 def limpar_status(valor):
-
     if pd.isna(valor):
         return 0
 
@@ -33,18 +37,6 @@ def limpar_texto(valor):
     return valor
 
 
-def limpar_codigo(valor):
-    if pd.isna(valor):
-        return None
-
-    valor = str(valor).strip()
-
-    if valor == "":
-        return None
-
-    return valor
-
-
 def limpar_decimal(valor):
     if pd.isna(valor):
         return 0
@@ -65,16 +57,17 @@ def limpar_decimal(valor):
         return 0
 
 
-def importar_dataframe(df: pd.DataFrame, db: Session):
-
-    from sqlalchemy.dialects.postgresql import insert
-
+def importar_dataframe(
+    df: pd.DataFrame,
+    db: Session,
+    loja_id: int,
+):
     inseridos = 0
     atualizados = 0
 
-    # Normaliza os códigos
     df = df.copy()
 
+    # Normaliza os códigos
     df["_codigo_normalizado"] = df["Código"].apply(
         normalizar_codigo_produto
     )
@@ -85,16 +78,14 @@ def importar_dataframe(df: pd.DataFrame, db: Session):
         & (df["_codigo_normalizado"] != "")
     ]
 
-    # Remove códigos duplicados dentro do próprio arquivo,
-    # mantendo somente a última ocorrência
+    # Remove duplicidades mantendo a última ocorrência
     df = df.drop_duplicates(
         subset=["_codigo_normalizado"],
-        keep="last"
+        keep="last",
     )
 
     tamanho_lote = 1000
 
-    # Processa em lotes para reduzir memória e tempo de transação
     for inicio_lote in range(0, len(df), tamanho_lote):
 
         lote = df.iloc[
@@ -103,7 +94,7 @@ def importar_dataframe(df: pd.DataFrame, db: Session):
 
         codigos_lote = lote["_codigo_normalizado"].tolist()
 
-        # Identifica quais códigos já existem
+        # Identifica produtos que já existem
         existentes = set(
             codigo
             for (codigo,) in (
@@ -113,60 +104,114 @@ def importar_dataframe(df: pd.DataFrame, db: Session):
             )
         )
 
-        registros = []
+        registros_produtos = []
 
         for _, linha in lote.iterrows():
 
             codigo = linha["_codigo_normalizado"]
 
-            registro = {
-                "codigo": codigo,
-                "descricao": limpar_texto(
-                    linha.get("Descrição")
-                ),
-                "departamento": normalizar_codigo(
-                    linha.get("Depto.")
-                ),
-                "custo": limpar_decimal(
-                    linha.get("Custo")
-                ),
-                "preco_venda": limpar_decimal(
-                    linha.get("Preço Venda")
-                ),
-                "estoque": limpar_decimal(
-                    linha.get("Estoque Atual")
-                ),
-                "estoque_minimo": 0,
-                "status": limpar_status(
-                    linha.get("Status")
-                ),
-            }
-
-            registros.append(registro)
+            registros_produtos.append(
+                {
+                    "codigo": codigo,
+                    "descricao": limpar_texto(
+                        linha.get("Descrição")
+                    ),
+                    "departamento": normalizar_codigo(
+                        linha.get("Depto.")
+                    ),
+                    "status": limpar_status(
+                        linha.get("Status")
+                    ),
+                }
+            )
 
             if codigo in existentes:
                 atualizados += 1
             else:
                 inseridos += 1
 
-        # UPSERT PostgreSQL
-        comando = insert(Produto).values(registros)
+        # Atualiza somente os dados globais do produto
+        comando_produto = insert(Produto).values(
+            registros_produtos
+        )
 
-        comando = comando.on_conflict_do_update(
+        comando_produto = comando_produto.on_conflict_do_update(
             index_elements=["codigo"],
             set_={
-                "descricao": comando.excluded.descricao,
-                "departamento": comando.excluded.departamento,
-                "custo": comando.excluded.custo,
-                "preco_venda": comando.excluded.preco_venda,
-                "estoque": comando.excluded.estoque,
-                "status": comando.excluded.status,
+                "descricao": comando_produto.excluded.descricao,
+                "departamento": comando_produto.excluded.departamento,
+                "status": comando_produto.excluded.status,
             },
         )
 
-        db.execute(comando)
+        db.execute(comando_produto)
+        db.flush()
 
-        # Libera o lote antes de continuar
+        # Recupera os IDs dos produtos
+        produtos = (
+            db.query(
+                Produto.id,
+                Produto.codigo,
+            )
+            .filter(
+                Produto.codigo.in_(codigos_lote)
+            )
+            .all()
+        )
+
+        produto_ids = {
+            codigo: produto_id
+            for produto_id, codigo in produtos
+        }
+
+        # Monta os dados específicos da loja
+        registros_produtos_lojas = []
+
+        for _, linha in lote.iterrows():
+
+            codigo = linha["_codigo_normalizado"]
+            produto_id = produto_ids.get(codigo)
+
+            if not produto_id:
+                continue
+
+            registros_produtos_lojas.append(
+                {
+                    "produto_id": produto_id,
+                    "loja_id": loja_id,
+                    "custo": limpar_decimal(
+                        linha.get("Custo")
+                    ),
+                    "preco_venda": limpar_decimal(
+                        linha.get("Preço Venda")
+                    ),
+                    "estoque_atual": limpar_decimal(
+                        linha.get("Estoque Atual")
+                    ),
+                    "estoque_trocas": 0,
+                }
+            )
+
+        # UPSERT dos dados específicos da loja
+        if registros_produtos_lojas:
+
+            comando_loja = insert(
+                ProdutoLoja
+            ).values(
+                registros_produtos_lojas
+            )
+
+            comando_loja = comando_loja.on_conflict_do_update(
+                constraint="uq_produtos_lojas_produto_loja",
+                set_={
+                    "custo": comando_loja.excluded.custo,
+                    "preco_venda": comando_loja.excluded.preco_venda,
+                    "estoque_atual": comando_loja.excluded.estoque_atual,
+                },
+            )
+
+            db.execute(comando_loja)
+
         db.commit()
 
     return {

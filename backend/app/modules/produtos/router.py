@@ -17,6 +17,8 @@ from fastapi import (
 
 
 from app.database import get_db
+from app.models.loja import Loja
+from fastapi import HTTPException
 
 from .service import ProdutoService
 from .schemas import ProdutoResponse
@@ -31,13 +33,26 @@ service = ProdutoService()
 
 @router.post("/importar")
 async def importar_produtos(
+    loja_id: int,
     arquivo: UploadFile = File(...),
     db: Session = Depends(get_db),
 ):
 
+    loja = db.query(Loja).filter(
+        Loja.id == loja_id,
+        Loja.ativo.is_(True),
+    ).first()
+
+    if not loja:
+        raise HTTPException(
+            status_code=404,
+            detail="Loja não encontrada ou inativa",
+        )
+
     return service.importar(
         arquivo,
         db,
+        loja_id,
     )
 
 
@@ -64,6 +79,7 @@ def listar_produtos(
         ge=1,
         le=100
     ),
+    loja_id: int | None = Query(default=None),
     db: Session = Depends(get_db),
 ):
 
@@ -74,4 +90,5 @@ def listar_produtos(
         status=status,
         offset=offset,
         limit=limit,
+        loja_id=loja_id,
     )

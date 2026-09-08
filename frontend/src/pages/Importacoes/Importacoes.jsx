@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   Box,
@@ -22,9 +22,29 @@ import {
 } from "../../services/importacaoService";
 
 export default function Importacoes() {
-  const lojaSelecionada = JSON.parse(
-    localStorage.getItem("lojaSelecionada")
-  );
+  const [lojaSelecionada, setLojaSelecionada] = useState(() => {
+    const loja = localStorage.getItem("lojaSelecionada");
+
+    return loja ? JSON.parse(loja) : null;
+  });
+
+  useEffect(() => {
+    const atualizarLoja = (evento) => {
+      setLojaSelecionada(evento.detail);
+    };
+
+    window.addEventListener(
+      "lojaSelecionadaAlterada",
+      atualizarLoja
+    );
+
+    return () => {
+      window.removeEventListener(
+        "lojaSelecionadaAlterada",
+        atualizarLoja
+      );
+    };
+  }, []);
 
   const [arquivoProdutos, setArquivoProdutos] = useState(null);
   const [arquivoDepartamentos, setArquivoDepartamentos] = useState(null);
@@ -135,6 +155,11 @@ export default function Importacoes() {
   }
 
   async function handleImportarProdutos() {
+    if (!lojaSelecionada) {
+      setErroProdutos("Selecione uma loja antes de importar os produtos.");
+      return;
+    }
+
     if (!arquivoProdutos) {
       setErroProdutos("Selecione um arquivo para importar.");
       return;
@@ -145,7 +170,7 @@ export default function Importacoes() {
       setErroProdutos("");
       setResultadoProdutos(null);
 
-      const dados = await importarProdutos(arquivoProdutos);
+      const dados = await importarProdutos(arquivoProdutos, lojaSelecionada.id);
 
       setResultadoProdutos(dados);
       setArquivoProdutos(null);
@@ -230,6 +255,13 @@ export default function Importacoes() {
   }
 
   async function handleImportarEntradas() {
+    if (!lojaSelecionada) {
+        setErroEntradas(
+        "Selecione uma loja antes de importar as entradas."
+        );
+        return;
+    }
+
     if (!arquivoEntradas) {
         setErroEntradas(
         "Selecione um arquivo para importar."
@@ -266,6 +298,13 @@ export default function Importacoes() {
     }
   }
   async function handleImportarVendas() {
+    if (!lojaSelecionada) {
+        setErroVendas(
+        "Selecione uma loja antes de importar as vendas."
+        );
+        return;
+    }
+
     if (!arquivoVendas) {
         setErroVendas(
         "Selecione um arquivo para importar."

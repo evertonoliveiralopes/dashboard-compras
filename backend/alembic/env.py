@@ -37,10 +37,6 @@ else:
 
 config.set_main_option("sqlalchemy.url", DATABASE_URL)
 
-print("=" * 60)
-print("DATABASE_URL:", DATABASE_URL)
-print("=" * 60)
-
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 if config.config_file_name is not None:

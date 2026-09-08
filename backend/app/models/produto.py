@@ -27,6 +27,11 @@ class Produto(Base):
     status = Column(Integer, default=0)
 
 
+    lojas = relationship(
+        "ProdutoLoja",
+        back_populates="produto"
+    )
+
     # Histórico de entradas desse produto
     entradas = relationship(
         "ItemEntrada",

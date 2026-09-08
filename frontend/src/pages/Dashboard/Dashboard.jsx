@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 
-import DashboardHeader from "../../components/dashboard/DashboardHeader";
 import DashboardGrid from "../../components/dashboard/DashboardGrid";
 
 import { Typography } from "@mui/material";
@@ -24,6 +23,24 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const atualizarLoja = (evento) => {
+      setLojaSelecionada(evento.detail);
+    };
+
+    window.addEventListener(
+      "lojaSelecionadaAlterada",
+      atualizarLoja
+    );
+
+    return () => {
+      window.removeEventListener(
+        "lojaSelecionadaAlterada",
+        atualizarLoja
+      );
+    };
+  }, []);
+
+  useEffect(() => {
     async function carregar() {
       try {
         setLoading(true);
@@ -45,15 +62,6 @@ export default function Dashboard() {
     carregar();
   }, [lojaSelecionada]);
 
-  const alterarLoja = (loja) => {
-    localStorage.setItem(
-      "lojaSelecionada",
-      JSON.stringify(loja)
-    );
-
-    setLojaSelecionada(loja);
-  };
-
   if (loading) {
     return (
       <Typography>
@@ -64,11 +72,6 @@ export default function Dashboard() {
 
   return (
     <>
-      <DashboardHeader
-        lojaSelecionada={lojaSelecionada}
-        onChangeLoja={alterarLoja}
-      />
-
       <DashboardGrid
         indicadores={indicadores}
         lojaId={lojaSelecionada?.id}

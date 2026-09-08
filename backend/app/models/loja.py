@@ -13,6 +13,8 @@ class Loja(Base):
     unidade = Column(String(100), nullable=False)
     ativo = Column(Boolean, nullable=False, default=True)
 
+    produtos = relationship("ProdutoLoja", back_populates="loja")
+
     vendas = relationship("Venda", back_populates="loja")
     entradas = relationship("Entrada", back_populates="loja")
     historico_importacoes = relationship(

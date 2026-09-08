@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   AppBar,
@@ -27,6 +27,8 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import MenuIcon from "@mui/icons-material/Menu";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
 
+import SeletorLoja from "../components/dashboard/SeletorLoja";
+
 import { useNavigate, useLocation } from "react-router-dom";
 
 const drawerWidth = 260;
@@ -37,6 +39,45 @@ export default function MainLayout({ children }) {
 
   const isMobile = useMediaQuery("(max-width:600px)");
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const [lojaSelecionada, setLojaSelecionada] = useState(() => {
+    const loja = localStorage.getItem("lojaSelecionada");
+    return loja ? JSON.parse(loja) : null;
+  });
+
+  useEffect(() => {
+    const atualizarLoja = (evento) => {
+      setLojaSelecionada(evento.detail);
+    };
+
+    window.addEventListener(
+      "lojaSelecionadaAlterada",
+      atualizarLoja
+    );
+
+    return () => {
+      window.removeEventListener(
+        "lojaSelecionadaAlterada",
+        atualizarLoja
+      );
+    };
+  }, []);
+
+  const alterarLoja = (loja) => {
+    localStorage.setItem(
+      "lojaSelecionada",
+      JSON.stringify(loja)
+    );
+
+    setLojaSelecionada(loja);
+
+    window.dispatchEvent(
+      new CustomEvent(
+        "lojaSelecionadaAlterada",
+        { detail: loja }
+      )
+    );
+  };
 
   const titulos = {
     "/dashboard": "Dashboard",
@@ -202,6 +243,11 @@ export default function MainLayout({ children }) {
                 gap: { xs: 0.5, sm: 2 },
               }}
             >
+              <SeletorLoja
+                lojaSelecionada={lojaSelecionada}
+                onChange={alterarLoja}
+              />
+
               <Typography
                 sx={{
                   display: { xs: "none", sm: "block" },

@@ -12,6 +12,7 @@ class ProdutoResponse(BaseModel):
     custo: Decimal
     preco_venda: Decimal
     estoque: Decimal
+    estoque_trocas: Decimal
     status: int
 
     model_config = ConfigDict(

@@ -27,6 +27,12 @@ import { buscarProdutos } from "../../services/produtoService";
 import { buscarDepartamentos } from "../../services/departamentoService";
 
 export default function Produtos() {
+  const [lojaSelecionada, setLojaSelecionada] = useState(() => {
+    const loja = localStorage.getItem("lojaSelecionada");
+
+    return loja ? JSON.parse(loja) : null;
+  });
+
   const [produtos, setProdutos] = useState([]);
 
   const [busca, setBusca] = useState("");
@@ -41,6 +47,24 @@ export default function Produtos() {
   const [pagina, setPagina] = useState(0);
   const [linhasPorPagina, setLinhasPorPagina] = useState(50);
   const [totalProdutos, setTotalProdutos] = useState(0);
+
+  useEffect(() => {
+    const atualizarLoja = (evento) => {
+      setLojaSelecionada(evento.detail);
+    };
+
+    window.addEventListener(
+      "lojaSelecionadaAlterada",
+      atualizarLoja
+    );
+
+    return () => {
+      window.removeEventListener(
+        "lojaSelecionadaAlterada",
+        atualizarLoja
+      );
+    };
+  }, []);
 
   async function carregarProdutos(
     filtros = {
@@ -61,6 +85,7 @@ export default function Produtos() {
         status: filtros.status,
         offset: novaPagina * novoLimite,
         limit: novoLimite,
+        lojaId: lojaSelecionada?.id,
       });
 
       setProdutos(dados.items);
@@ -87,8 +112,22 @@ export default function Produtos() {
     }
 
     carregarDepartamentos();
-    carregarProdutos();
   }, []);
+
+  useEffect(() => {
+    if (lojaSelecionada?.id) {
+      setPagina(0);
+      carregarProdutos(
+        {
+          busca,
+          departamento: departamentoSelecionado,
+          status: statusSelecionado,
+        },
+        0,
+        linhasPorPagina
+      );
+    }
+  }, [lojaSelecionada]);
 
   function handleBuscar() {
     setPagina(0);
@@ -125,7 +164,8 @@ export default function Produtos() {
       if (
         colunaOrdenacao === "custo" ||
         colunaOrdenacao === "preco_venda" ||
-        colunaOrdenacao === "estoque"
+        colunaOrdenacao === "estoque" ||
+        colunaOrdenacao === "estoque_trocas"
       ) {
         valorA = Number(valorA);
         valorB = Number(valorB);
@@ -391,6 +431,18 @@ export default function Produtos() {
                 </TableCell>
 
                 <TableCell
+                  align="right"
+                  onClick={() => alterarOrdenacao("estoque_trocas")}
+                  sx={{ cursor: "pointer" }}
+                >
+                  <strong>
+                    Estoque Trocas{" "}
+                    {colunaOrdenacao === "estoque_trocas" &&
+                      (ordem === "asc" ? "↑" : "↓")}
+                  </strong>
+                </TableCell>
+
+                <TableCell
                   align="center"
                   onClick={() => alterarOrdenacao("status")}
                   sx={{ cursor: "pointer" }}
@@ -413,7 +465,7 @@ export default function Produtos() {
                 <TableRow>
 
                   <TableCell
-                    colSpan={7}
+                    colSpan={8}
                     align="center"
                   >
 
@@ -430,7 +482,7 @@ export default function Produtos() {
                 <TableRow>
 
                   <TableCell
-                    colSpan={7}
+                    colSpan={8}
                     align="center"
                   >
 
@@ -485,6 +537,17 @@ export default function Produtos() {
                         }
                       )}
                     </TableCell>
+                    <TableCell align="right">
+                      {Number(
+                        produto.estoque_trocas
+                      ).toLocaleString(
+                        "pt-BR",
+                        {
+                          minimumFractionDigits: 3,
+                        }
+                      )}
+                    </TableCell>
+
                     <TableCell align="center">
                       <Chip
                         label={

@@ -29,9 +29,15 @@ def compras_por_departamento(loja_id: int | None = Query(None), db: Session = De
     return service.compras_por_departamento(db, loja_id)
 
 @router.get("/alertas")
-def alertas(db: Session = Depends(get_db)):
-    return service.alertas(db)
+def alertas(
+    loja_id: int | None = Query(None),
+    db: Session = Depends(get_db),
+):
+    return service.alertas(db, loja_id)
 
 @router.get("/ultimas-importacoes")
-def ultimas_importacoes(db: Session = Depends(get_db)):
-    return service.ultimas_importacoes(db)
+def ultimas_importacoes(
+    loja_id: int | None = Query(None),
+    db: Session = Depends(get_db),
+):
+    return service.ultimas_importacoes(db, loja_id)
