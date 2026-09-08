@@ -17,13 +17,23 @@ import app.models
 # access to the values within the .ini file in use.
 config = context.config
 
-DATABASE_URL = (
-    f"postgresql://{os.getenv('DB_USER')}:"
-    f"{os.getenv('DB_PASSWORD')}@"
-    f"{os.getenv('DB_HOST')}:"
-    f"{os.getenv('DB_PORT')}/"
-    f"{os.getenv('DB_NAME')}"
-)
+DB_HOST = os.getenv("DB_HOST")
+DB_PORT = os.getenv("DB_PORT")
+DB_NAME = os.getenv("DB_NAME")
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+
+if DB_HOST and DB_HOST.startswith("/cloudsql/"):
+    DATABASE_URL = (
+        f"postgresql://{DB_USER}:{DB_PASSWORD}@/{DB_NAME}"
+    )
+    connect_args = {"host": DB_HOST}
+else:
+    DATABASE_URL = (
+        f"postgresql://{DB_USER}:{DB_PASSWORD}"
+        f"@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    )
+    connect_args = {}
 
 config.set_main_option("sqlalchemy.url", DATABASE_URL)
 
@@ -83,6 +93,7 @@ def run_migrations_online() -> None:
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
+        connect_args=connect_args,
     )
 
     with connectable.connect() as connection:
