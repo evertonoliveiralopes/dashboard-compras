@@ -67,80 +67,109 @@ def limpar_decimal(valor):
 
 def importar_dataframe(df: pd.DataFrame, db: Session):
 
+    from sqlalchemy.dialects.postgresql import insert
+
     inseridos = 0
     atualizados = 0
 
-    for _, linha in df.iterrows():
-        
-        codigo = normalizar_codigo_produto(linha.get("Código"))
+    # Normaliza os códigos
+    df = df.copy()
 
-        if not codigo:
-            continue
+    df["_codigo_normalizado"] = df["Código"].apply(
+        normalizar_codigo_produto
+    )
 
-        descricao = limpar_texto(linha.get("Descrição"))
+    # Remove registros sem código
+    df = df[
+        df["_codigo_normalizado"].notna()
+        & (df["_codigo_normalizado"] != "")
+    ]
 
-        departamento = normalizar_codigo(    linha.get("Depto."))
+    # Remove códigos duplicados dentro do próprio arquivo,
+    # mantendo somente a última ocorrência
+    df = df.drop_duplicates(
+        subset=["_codigo_normalizado"],
+        keep="last"
+    )
 
-        estoque = limpar_decimal(linha.get("Estoque Atual"))
+    tamanho_lote = 1000
 
-        custo = limpar_decimal(linha.get("Custo"))
+    # Processa em lotes para reduzir memória e tempo de transação
+    for inicio_lote in range(0, len(df), tamanho_lote):
 
-        preco_venda = limpar_decimal(linha.get("Preço Venda"))
+        lote = df.iloc[
+            inicio_lote:inicio_lote + tamanho_lote
+        ]
 
-        status = limpar_status(linha.get("Status"))
+        codigos_lote = lote["_codigo_normalizado"].tolist()
 
-        produto = (
-            db.query(Produto)
-            .filter(Produto.codigo == codigo)
-            .first()
+        # Identifica quais códigos já existem
+        existentes = set(
+            codigo
+            for (codigo,) in (
+                db.query(Produto.codigo)
+                .filter(Produto.codigo.in_(codigos_lote))
+                .all()
+            )
         )
 
-        if produto:
+        registros = []
 
-            produto.descricao = descricao
-            produto.departamento = departamento
-            produto.estoque = estoque
-            produto.custo = custo
-            produto.preco_venda = preco_venda
-            produto.status = status
+        for _, linha in lote.iterrows():
 
-            atualizados += 1
+            codigo = linha["_codigo_normalizado"]
 
-        else:
+            registro = {
+                "codigo": codigo,
+                "descricao": limpar_texto(
+                    linha.get("Descrição")
+                ),
+                "departamento": normalizar_codigo(
+                    linha.get("Depto.")
+                ),
+                "custo": limpar_decimal(
+                    linha.get("Custo")
+                ),
+                "preco_venda": limpar_decimal(
+                    linha.get("Preço Venda")
+                ),
+                "estoque": limpar_decimal(
+                    linha.get("Estoque Atual")
+                ),
+                "estoque_minimo": 0,
+                "status": limpar_status(
+                    linha.get("Status")
+                ),
+            }
 
-            novo_produto = Produto(
+            registros.append(registro)
 
-                codigo=codigo,
-                descricao=descricao,
-                departamento=departamento,
+            if codigo in existentes:
+                atualizados += 1
+            else:
+                inseridos += 1
 
-                custo=custo,
-                preco_venda=preco_venda,
+        # UPSERT PostgreSQL
+        comando = insert(Produto).values(registros)
 
-                estoque=estoque,
-                estoque_minimo=0,
+        comando = comando.on_conflict_do_update(
+            index_elements=["codigo"],
+            set_={
+                "descricao": comando.excluded.descricao,
+                "departamento": comando.excluded.departamento,
+                "custo": comando.excluded.custo,
+                "preco_venda": comando.excluded.preco_venda,
+                "estoque": comando.excluded.estoque,
+                "status": comando.excluded.status,
+            },
+        )
 
-                status=status,
+        db.execute(comando)
 
-            )
-
-            db.add(novo_produto)
-
-            inseridos += 1
-
-    try:
-
+        # Libera o lote antes de continuar
         db.commit()
 
-    except Exception:
-
-        db.rollback()
-
-        raise
-
     return {
-
         "inseridos": inseridos,
         "atualizados": atualizados,
-
     }

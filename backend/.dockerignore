@@ -1,0 +1,6 @@
+*.bak
+*.otimizado
+*.pre_upsert
+__pycache__/
+*.pyc
+.git/
