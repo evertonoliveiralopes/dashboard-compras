@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -10,34 +10,33 @@ import {
 import { useNavigate } from "react-router-dom";
 import StoreIcon from "@mui/icons-material/Store";
 import logo from "../../assets/images/compra360-logo.png";
+import { buscarLojas } from "../../services/lojaService";
 
 
 
-const lojas = [
-  {
-    id: 1,
-    codigo: "001",
-    nome: "Comercial Bigus",
-    unidade: "Morro do Algodão",
-  },
-  {
-    id: 2,
-    codigo: "002",
-    nome: "Comercial Bigus 2",
-    unidade: "Barranco Alto",
-  },
-  {
-    id: 3,
-    codigo: "003",
-    nome: "Comecial Peck",
-    unidade: "Pereque Mirim",
-  },
-];
+
 
 export default function SelecaoLoja() {
   const navigate = useNavigate();
 
+  const [lojas, setLojas] = useState([]);
   const [lojaSelecionada, setLojaSelecionada] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function carregarLojas() {
+      try {
+        const dados = await buscarLojas();
+        setLojas(dados);
+      } catch (erro) {
+        console.error("Erro ao carregar lojas:", erro);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    carregarLojas();
+  }, []);
 
   const continuar = () => {
     if (!lojaSelecionada) return;
@@ -103,7 +102,15 @@ export default function SelecaoLoja() {
         </Box>
 
         <Stack spacing={2}>
-          {lojas.map((loja) => (
+          {loading ? (
+            <Typography
+              color="text.secondary"
+              textAlign="center"
+            >
+              Carregando lojas...
+            </Typography>
+          ) : (
+            lojas.map((loja) => (
             <Card
               key={loja.id}
               elevation={0}
@@ -166,7 +173,8 @@ export default function SelecaoLoja() {
                 </Box>
               </CardActionArea>
             </Card>
-          ))}
+            ))
+          )}
         </Stack>
 
         <Button

@@ -20,10 +20,7 @@ import {
 import { buscarTopFornecedores } from "../../../services/dashboardChartService";
 
 
-export default function TopFornecedoresChart() {
-  const lojaSelecionada = JSON.parse(
-    localStorage.getItem("lojaSelecionada")
-  );
+export default function TopFornecedoresChart({ lojaId }) {
 
   const [dados, setDados] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -32,7 +29,7 @@ export default function TopFornecedoresChart() {
     async function carregarDados() {
       try {
         const response = await buscarTopFornecedores(
-          lojaSelecionada?.id
+          lojaId
         );
 
         console.log("Top fornecedores:", response);
@@ -51,7 +48,7 @@ export default function TopFornecedoresChart() {
 
     carregarDados();
 
-  }, []);
+  }, [lojaId]);
 
 
   if (loading) {

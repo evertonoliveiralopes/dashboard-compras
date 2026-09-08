@@ -8,9 +8,11 @@ import { Typography } from "@mui/material";
 import { buscarIndicadores } from "../../services/dashboardService";
 
 export default function Dashboard() {
-  const lojaSelecionada = JSON.parse(
-    localStorage.getItem("lojaSelecionada")
-  );
+  const [lojaSelecionada, setLojaSelecionada] = useState(() => {
+    const loja = localStorage.getItem("lojaSelecionada");
+
+    return loja ? JSON.parse(loja) : null;
+  });
 
   const [indicadores, setIndicadores] = useState({
     compras: 0,
@@ -24,6 +26,8 @@ export default function Dashboard() {
   useEffect(() => {
     async function carregar() {
       try {
+        setLoading(true);
+
         const dados = await buscarIndicadores(
           lojaSelecionada?.id
         );
@@ -39,7 +43,16 @@ export default function Dashboard() {
     }
 
     carregar();
-  }, []);
+  }, [lojaSelecionada]);
+
+  const alterarLoja = (loja) => {
+    localStorage.setItem(
+      "lojaSelecionada",
+      JSON.stringify(loja)
+    );
+
+    setLojaSelecionada(loja);
+  };
 
   if (loading) {
     return (
@@ -51,9 +64,15 @@ export default function Dashboard() {
 
   return (
     <>
-      <DashboardHeader />
+      <DashboardHeader
+        lojaSelecionada={lojaSelecionada}
+        onChangeLoja={alterarLoja}
+      />
 
-      <DashboardGrid indicadores={indicadores} />
+      <DashboardGrid
+        indicadores={indicadores}
+        lojaId={lojaSelecionada?.id}
+      />
     </>
   );
 }

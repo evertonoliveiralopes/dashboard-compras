@@ -15,7 +15,7 @@ import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import PaidIcon from "@mui/icons-material/Paid";
 
 
-export default function DashboardGrid({ indicadores }) {
+export default function DashboardGrid({ indicadores, lojaId }) {
   return (
     <>
       {/* KPIs */}
@@ -61,13 +61,13 @@ export default function DashboardGrid({ indicadores }) {
 
       {/* Gráfico principal */}
       <Box sx={{ mt: 4 }}>
-        <ComprasMesChart />
+        <ComprasMesChart lojaId={lojaId} />
       </Box>
 
       {/* Segunda linha */}
       <Grid container spacing={3} sx={{ mt: 1 }}>
         <Grid size={{ xs: 12, lg: 6 }}>
-          <TopFornecedoresChart />
+          <TopFornecedoresChart lojaId={lojaId} />
         </Grid>
 
         <Grid size={{ xs: 12, lg: 6 }}>
@@ -79,7 +79,7 @@ export default function DashboardGrid({ indicadores }) {
         <Grid container spacing={3} sx={{ mt: 1 }}>
 
           <Grid size={{ xs: 12 }}>
-            <ComprasDepartamentoChart />
+            <ComprasDepartamentoChart lojaId={lojaId} />
           </Grid>
 
         </Grid>
