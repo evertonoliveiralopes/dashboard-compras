@@ -2,8 +2,9 @@ from fastapi import APIRouter, UploadFile, File, Depends
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.modules.fornecedores.service import ler_arquivo
+from app.modules.fornecedores.service import ler_arquivo, listar
 from app.modules.fornecedores.importador import importar_dataframe
+from app.modules.fornecedores.schemas import FornecedoresPaginadosResponse
 from app.models.historico_importacao import HistoricoImportacao
 
 
@@ -52,3 +53,21 @@ async def importar_fornecedores(
         "arquivo": arquivo.filename,
         **resultado,
     }   
+@router.get("", response_model=FornecedoresPaginadosResponse)
+def listar_fornecedores(
+    busca: str | None = None,
+    cnpj: str | None = None,
+    ativo: bool | None = None,
+    offset: int = 0,
+    limit: int = 50,
+    db: Session = Depends(get_db),
+):
+
+    return listar(
+        db=db,
+        busca=busca,
+        cnpj=cnpj,
+        ativo=ativo,
+        offset=offset,
+        limit=limit,
+    )
