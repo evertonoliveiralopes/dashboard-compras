@@ -209,6 +209,7 @@ def importar_dataframe(
                     "custo": comando_loja.excluded.custo,
                     "preco_venda": comando_loja.excluded.preco_venda,
                     "estoque_atual": comando_loja.excluded.estoque_atual,
+                    "estoque_trocas": comando_loja.excluded.estoque_trocas,
                 },
             )
 
