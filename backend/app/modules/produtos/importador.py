@@ -188,7 +188,9 @@ def importar_dataframe(
                     "estoque_atual": limpar_decimal(
                         linha.get("Estoque Atual")
                     ),
-                    "estoque_trocas": 0,
+                    "estoque_trocas": limpar_decimal(
+                        linha.get("Estoque Atual Troca")
+                    ),
                 }
             )
 
