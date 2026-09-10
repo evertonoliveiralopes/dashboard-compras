@@ -137,6 +137,7 @@ export default function MainLayout({ children }) {
         <MenuItem
           icon={<LocalShippingIcon />}
           text="Fornecedores"
+          onClick={() => handleNavigate("/fornecedores")}
         />
 
         <MenuItem

@@ -6,6 +6,7 @@ import Dashboard from "../pages/Dashboard/Dashboard";
 import ConfiguracaoAlertas from "../pages/ConfiguracaoAlertas/ConfiguracaoAlertas";
 import MainLayout from "../layouts/MainLayout";
 import Produtos from "../pages/Produtos/Produtos";
+import Fornecedores from "../pages/Fornecedores/Fornecedores";
 import Importacoes from "../pages/Importacoes/Importacoes";
 
 import PrivateRoute from "./PrivateRoute";
@@ -63,6 +64,17 @@ export default function AppRoutes() {
           <PrivateRoute>
             <MainLayout>
               <Produtos />
+            </MainLayout>
+          </PrivateRoute>
+        }
+      />
+      {/* Fornecedores */}
+      <Route
+        path="/fornecedores"
+        element={
+          <PrivateRoute>
+            <MainLayout>
+              <Fornecedores />
             </MainLayout>
           </PrivateRoute>
         }
