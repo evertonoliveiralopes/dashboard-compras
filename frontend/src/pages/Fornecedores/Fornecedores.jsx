@@ -11,6 +11,7 @@ import {
   Select,
   MenuItem,
   CircularProgress,
+  TablePagination,
 } from "@mui/material";
 
 import SearchIcon from "@mui/icons-material/Search";
@@ -19,6 +20,10 @@ import { buscarFornecedores } from "../../services/fornecedorService";
 
 export default function Fornecedores() {
   const [fornecedores, setFornecedores] = useState([]);
+  const [totalFornecedores, setTotalFornecedores] = useState(0);
+
+  const [pagina, setPagina] = useState(0);
+  const [linhasPorPagina, setLinhasPorPagina] = useState(25);
 
   const [busca, setBusca] = useState("");
   const [cnpj, setCnpj] = useState("");
@@ -32,7 +37,9 @@ export default function Fornecedores() {
       busca,
       cnpj,
       ativo: statusSelecionado,
-    }
+    },
+    paginaAtual = pagina,
+    limite = linhasPorPagina
   ) {
     try {
       setCarregando(true);
@@ -42,9 +49,12 @@ export default function Fornecedores() {
         busca: filtros.busca,
         cnpj: filtros.cnpj,
         ativo: filtros.ativo,
+        offset: paginaAtual * limite,
+        limit: limite,
       });
 
       setFornecedores(dados.items);
+      setTotalFornecedores(dados.total);
     } catch (error) {
       console.error("Erro ao buscar fornecedores:", error);
 
@@ -61,7 +71,17 @@ export default function Fornecedores() {
   }, []);
 
   function handleBuscar() {
-    carregarFornecedores();
+    setPagina(0);
+
+    carregarFornecedores(
+      {
+        busca,
+        cnpj,
+        ativo: statusSelecionado,
+      },
+      0,
+      linhasPorPagina
+    );
   }
 
   function handleLimpar() {
@@ -74,13 +94,17 @@ export default function Fornecedores() {
     setBusca("");
     setCnpj("");
     setStatusSelecionado("");
+    setPagina(0);
 
-    carregarFornecedores(filtros);
+    carregarFornecedores(
+      filtros,
+      0,
+      linhasPorPagina
+    );
   }
 
   return (
     <Box>
-
       <Paper
         elevation={2}
         sx={{
@@ -88,7 +112,6 @@ export default function Fornecedores() {
           mb: 3,
         }}
       >
-
         <Typography
           variant="h6"
           sx={{ mb: 2 }}
@@ -104,7 +127,6 @@ export default function Fornecedores() {
             flexWrap: "wrap",
           }}
         >
-
           <TextField
             fullWidth
             size="small"
@@ -199,7 +221,6 @@ export default function Fornecedores() {
           >
             Limpar
           </Button>
-
         </Box>
 
         {carregando && (
@@ -229,7 +250,7 @@ export default function Fornecedores() {
               variant="body2"
               sx={{ mb: 2 }}
             >
-              Fornecedores encontrados: {fornecedores.length}
+              Fornecedores encontrados: {totalFornecedores}
             </Typography>
 
             <Box
@@ -374,11 +395,55 @@ export default function Fornecedores() {
                 </Box>
               </Box>
             </Box>
+
+            <TablePagination
+              component="div"
+              count={totalFornecedores}
+              page={pagina}
+              onPageChange={(event, novaPagina) => {
+                setPagina(novaPagina);
+
+                carregarFornecedores(
+                  {
+                    busca,
+                    cnpj,
+                    ativo: statusSelecionado,
+                  },
+                  novaPagina,
+                  linhasPorPagina
+                );
+              }}
+              rowsPerPage={linhasPorPagina}
+              onRowsPerPageChange={(event) => {
+                const novoLimite = parseInt(
+                  event.target.value,
+                  10
+                );
+
+                setLinhasPorPagina(novoLimite);
+                setPagina(0);
+
+                carregarFornecedores(
+                  {
+                    busca,
+                    cnpj,
+                    ativo: statusSelecionado,
+                  },
+                  0,
+                  novoLimite
+                );
+              }}
+              rowsPerPageOptions={[25, 50, 100]}
+              labelRowsPerPage="Fornecedores por página:"
+              labelDisplayedRows={({ from, to, count }) =>
+                `${from}-${to} de ${
+                  count !== -1 ? count : `mais de ${to}`
+                }`
+              }
+            />
           </Box>
         )}
-
       </Paper>
-
     </Box>
   );
 }
