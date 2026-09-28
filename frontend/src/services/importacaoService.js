@@ -9,7 +9,9 @@ export async function importarProdutos(arquivo, lojaId) {
     "/produtos/importar",
     formData,
     {
-      params: { loja_id: lojaId },
+      params: {
+        loja_id: lojaId,
+      },
     }
   );
 
@@ -51,7 +53,9 @@ export async function importarEntradas(arquivo, lojaId) {
     "/entradas/importar",
     formData,
     {
-      params: { loja_id: lojaId },
+      params: {
+        loja_id: lojaId,
+      },
     }
   );
 
@@ -59,17 +63,184 @@ export async function importarEntradas(arquivo, lojaId) {
 }
 
 export async function importarVendas(arquivo, lojaId) {
-  const formData = new FormData();
+  /*
+   * O Cloud Run possui limite de tamanho para uma requisição.
+   *
+   * Arquivos grandes de vendas são divididos no navegador
+   * em partes de aproximadamente 4 MB.
+   *
+   * Trabalhamos diretamente com os bytes originais para
+   * preservar o arquivo Latin-1 utilizado pelo backend.
+   */
 
-  formData.append("arquivo", arquivo);
+  const buffer = await arquivo.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
 
-  const response = await api.post(
-    "/vendas/importar",
-    formData,
-    {
-      params: { loja_id: lojaId },
+  const TAMANHO_PARTE = 4 * 1024 * 1024;
+
+  /*
+   * Procura o primeiro LF.
+   * Tudo antes dele corresponde ao cabeçalho.
+   */
+  let fimCabecalho = -1;
+
+  for (let i = 0; i < bytes.length; i++) {
+    if (bytes[i] === 10) {
+      fimCabecalho = i + 1;
+      break;
     }
+  }
+
+  if (fimCabecalho === -1) {
+    throw new Error(
+      "Arquivo de vendas inválido: cabeçalho não encontrado."
+    );
+  }
+
+  const cabecalho = bytes.slice(
+    0,
+    fimCabecalho
   );
 
-  return response.data;
+  const partes = [];
+
+  let inicioDados = fimCabecalho;
+
+  /*
+   * Divide o arquivo em blocos.
+   *
+   * Cada bloco começa no início de uma linha e termina
+   * depois de um LF. Dessa forma não cortamos uma venda
+   * no meio do registro.
+   */
+  while (inicioDados < bytes.length) {
+    let fimDados =
+      Math.min(
+        inicioDados + TAMANHO_PARTE,
+        bytes.length
+      );
+
+    /*
+     * Se ainda não chegamos ao final do arquivo,
+     * procura o próximo LF para completar a última
+     * linha da parte.
+     */
+    if (fimDados < bytes.length) {
+      while (
+        fimDados < bytes.length &&
+        bytes[fimDados] !== 10
+      ) {
+        fimDados++;
+      }
+
+      if (fimDados < bytes.length) {
+        fimDados++;
+      }
+    }
+
+    const dadosParte = bytes.slice(
+      inicioDados,
+      fimDados
+    );
+
+    partes.push(
+      new Blob(
+        [
+          cabecalho,
+          dadosParte,
+        ],
+        {
+          type: "text/csv",
+        }
+      )
+    );
+
+    inicioDados = fimDados;
+  }
+
+  if (partes.length === 0) {
+    throw new Error(
+      "Arquivo de vendas não possui registros para importar."
+    );
+  }
+
+  console.log(
+    `Arquivo de vendas dividido em ${partes.length} partes.`
+  );
+
+  let totalInseridos = 0;
+  let totalErros = 0;
+  let totalAtualizados = 0;
+
+  /*
+   * Envia uma parte por vez.
+   */
+  for (let i = 0; i < partes.length; i++) {
+    const numeroParte = i + 1;
+
+    console.log(
+      `Enviando parte ${numeroParte} de ${partes.length}...`
+    );
+
+    const nomeParte =
+      `${arquivo.name}.parte-${numeroParte}-de-${partes.length}.csv`;
+
+    const formData = new FormData();
+
+    formData.append(
+      "arquivo",
+      partes[i],
+      nomeParte
+    );
+
+    try {
+      const response = await api.post(
+        "/vendas/importar",
+        formData,
+        {
+          params: {
+            loja_id: lojaId,
+          },
+        }
+      );
+
+      const dados = response.data;
+
+      totalInseridos += Number(
+        dados.inseridos ||
+          dados.registros_importados ||
+          0
+      );
+
+      totalAtualizados += Number(
+        dados.atualizados || 0
+      );
+
+      totalErros += Number(
+        dados.erros || 0
+      );
+
+      console.log(
+        `Parte ${numeroParte} concluída.`
+      );
+    } catch (error) {
+      const detalhe =
+        error.response?.data?.detail ||
+        error.message ||
+        "Erro desconhecido";
+
+      throw new Error(
+        `Erro ao importar a parte ${numeroParte} de ${partes.length}: ${detalhe}`
+      );
+    }
+  }
+
+  return {
+    status: "ok",
+    registros_importados: totalInseridos,
+    inseridos: totalInseridos,
+    atualizados: totalAtualizados,
+    erros: totalErros,
+    partes_processadas: partes.length,
+  };
 }

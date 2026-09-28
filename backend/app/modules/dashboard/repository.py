@@ -8,6 +8,7 @@ from app.models.item_entrada import ItemEntrada
 from app.models.entrada import Entrada
 from app.models.departamento import Departamento
 from app.models.historico_importacao import HistoricoImportacao
+from app.models.venda import Venda
 
 
 class DashboardRepository:
@@ -357,3 +358,110 @@ class DashboardRepository:
         resultado = query.scalar()
 
         return float(resultado)
+
+    def indicadores_periodo(
+        self,
+        db: Session,
+        loja_id,
+        data_inicio,
+        data_fim,
+        data_inicio_anterior,
+        data_fim_anterior,
+    ):
+        compras_atual = (
+            db.query(
+                func.coalesce(
+                    func.sum(
+                        ItemEntrada.quantidade
+                        * ItemEntrada.custo
+                    ),
+                    0,
+                )
+            )
+            .join(
+                Entrada,
+                Entrada.id == ItemEntrada.entrada_id,
+            )
+            .filter(
+                Entrada.loja_id == loja_id,
+                Entrada.data_entrada >= data_inicio,
+                Entrada.data_entrada < data_fim,
+            )
+            .scalar()
+        )
+
+        compras_anterior = (
+            db.query(
+                func.coalesce(
+                    func.sum(
+                        ItemEntrada.quantidade
+                        * ItemEntrada.custo
+                    ),
+                    0,
+                )
+            )
+            .join(
+                Entrada,
+                Entrada.id == ItemEntrada.entrada_id,
+            )
+            .filter(
+                Entrada.loja_id == loja_id,
+                Entrada.data_entrada >= data_inicio_anterior,
+                Entrada.data_entrada < data_fim_anterior,
+            )
+            .scalar()
+        )
+
+        vendas_atual = (
+            db.query(
+                func.coalesce(
+                    func.sum(Venda.quantidade),
+                    0,
+                )
+            )
+            .filter(
+                Venda.loja_id == loja_id,
+                Venda.data >= data_inicio,
+                Venda.data < data_fim,
+            )
+            .scalar()
+        )
+
+        vendas_anterior = (
+            db.query(
+                func.coalesce(
+                    func.sum(Venda.quantidade),
+                    0,
+                )
+            )
+            .filter(
+                Venda.loja_id == loja_id,
+                Venda.data >= data_inicio_anterior,
+                Venda.data < data_fim_anterior,
+            )
+            .scalar()
+        )
+
+        valor_estoque = (
+            db.query(
+                func.coalesce(
+                    func.sum(
+                        ProdutoLoja.estoque_atual
+                        * ProdutoLoja.custo
+                    ),
+                    0,
+                )
+            )
+            .filter(
+                ProdutoLoja.loja_id == loja_id
+            )
+            .scalar()
+        )
+
+        return {
+            "compras_atual": float(compras_atual or 0),
+            "compras_anterior": float(compras_anterior or 0),
+            "vendas_atual": float(vendas_atual or 0),
+            "vendas_anterior": float(vendas_anterior or 0),
+            "valor_estoque": float(valor_estoque or 0),
+        }

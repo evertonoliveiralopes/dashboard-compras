@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from .service import DashboardService
+from datetime import date
 
 router = APIRouter(
     prefix="/dashboard",
@@ -13,8 +14,20 @@ service = DashboardService()
 
 
 @router.get("/indicadores")
-def indicadores(loja_id: int | None = Query(None), db: Session = Depends(get_db)):
-    return service.indicadores(db, loja_id)
+def indicadores(
+    loja_id: int | None = Query(None),
+    periodo: str = Query("mes"),
+    data_inicio: date | None = Query(None),
+    data_fim: date | None = Query(None),
+    db: Session = Depends(get_db),
+):
+    return service.indicadores(
+        db=db,
+        loja_id=loja_id,
+        periodo=periodo,
+        data_inicio=data_inicio,
+        data_fim=data_fim,
+    )
 
 @router.get("/compras-mes")
 def compras_mes(loja_id: int | None = Query(None), db: Session = Depends(get_db)):
