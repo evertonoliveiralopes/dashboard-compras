@@ -67,7 +67,7 @@ export default function DashboardGrid({
       {/* KPIs */}
       <Grid container spacing={3}>
 
-        <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+        <Grid size={{ xs: 12, md: 6, lg: 2 }}>
           <KPICard
             titulo="Valor Comprado"
             valor={formatarMoeda(
@@ -108,7 +108,7 @@ export default function DashboardGrid({
         </Grid>
 
 
-        <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+        <Grid size={{ xs: 12, md: 6, lg: 2 }}>
           <KPICard
             titulo="Quantidade Vendida"
             valor={formatarNumero(
@@ -150,7 +150,7 @@ export default function DashboardGrid({
         </Grid>
 
 
-        <Grid size={{ xs: 12, md: 6, lg: 2 }}>
+        <Grid size={{ xs: 12, md: 6, lg: 3 }}>
           <KPICard
             titulo="Valor em Estoque"
             valor={formatarMoeda(
