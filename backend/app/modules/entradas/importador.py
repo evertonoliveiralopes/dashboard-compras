@@ -27,15 +27,42 @@ def importar_arquivo(
     db: Session,
     loja_id: int,
 ):
+    import csv
+    import io
 
-    df = pd.read_csv(
-        arquivo.file,
-        sep=",",
-        encoding="latin1",
-        header=None,
-        engine="python",
-        on_bad_lines="skip",
-    )
+    conteudo = arquivo.file.read().decode("latin1")
+
+    linhas_normalizadas = []
+
+    leitor = csv.reader(io.StringIO(conteudo))
+
+    for linha in leitor:
+        if len(linha) == 16:
+            linhas_normalizadas.append(linha)
+
+        elif len(linha) == 18:
+            linha = [
+                linha[0],   # nota_fiscal
+                linha[1],   # tipo
+                linha[2],   # mes
+                linha[3],   # ano
+                linha[4],   # data_entrada
+                linha[5],   # cfop
+                linha[6],   # coi
+                linha[7],   # codigo_fornecedor
+                linha[8],   # codigo_produto
+                linha[9],   # descricao_produto
+                linha[10],  # emb
+                linha[11],  # quantidade
+                linha[13],  # emb_saida
+                linha[14],  # custo_unitario
+                linha[16],  # coluna_extra
+                linha[17],  # valor_total
+            ]
+
+            linhas_normalizadas.append(linha)
+
+    df = pd.DataFrame(linhas_normalizadas)
 
     df.columns = [
         "nota_fiscal",
@@ -55,6 +82,7 @@ def importar_arquivo(
         "coluna_extra",
         "valor_total",
     ]
+
     registros_importados = len(df)
 
     return importar_dataframe(
@@ -64,7 +92,6 @@ def importar_arquivo(
         registros_importados,
         loja_id,
     )
-
 
 def importar_dataframe(
     df: pd.DataFrame,
