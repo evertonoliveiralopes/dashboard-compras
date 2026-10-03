@@ -49,7 +49,11 @@ O importador de entradas:
 
 - suporta os layouts de 16 e 18 colunas do relatório Arius;
 - normaliza códigos de produtos e fornecedores;
+- identifica a entrada considerando nota fiscal, fornecedor e data de entrada;
 - evita duplicação de entradas e itens já importados;
+- consolida linhas repetidas do mesmo produto dentro da mesma entrada;
+- utiliza a soma das quantidades e o custo médio ponderado na consolidação de itens repetidos;
+- mantém a reimportação idempotente, sem somar novamente itens que já existiam antes da execução;
 - utiliza cache em memória para reduzir consultas repetitivas ao banco;
 - suporta equivalências conhecidas de códigos históricos de fornecedores;
 - registra o resultado no histórico de importações.
@@ -70,13 +74,17 @@ A Loja 1 possui histórico de vendas importado de agosto de 2025 a agosto de 202
 
 ### Compras
 
-A carga histórica de compras da Loja 1 entre agosto e dezembro de 2025 foi validada com:
+A Loja 1 possui histórico de compras validado de agosto de 2025 a setembro de 2026.
 
-- 30.989 itens de entrada;
+Os arquivos históricos utilizados na validação possuem:
+
+- 82.725 registros válidos de compra;
+- 82.724 itens de entrada após a consolidação;
+- 1 linha consolidada por repetição do mesmo produto dentro da mesma entrada;
 - 0 fornecedores não encontrados;
 - 0 produtos não encontrados.
 
-Quantidade de itens por mês:
+Quantidade de itens consolidados por mês:
 
 | Mês | Itens |
 | --- | ---: |
@@ -85,9 +93,24 @@ Quantidade de itens por mês:
 | Outubro/2025 | 6.493 |
 | Novembro/2025 | 7.066 |
 | Dezembro/2025 | 5.798 |
-| **Total** | **30.989** |
+| Janeiro/2026 | 4.506 |
+| Fevereiro/2026 | 5.611 |
+| Março/2026 | 5.660 |
+| Abril/2026 | 6.314 |
+| Maio/2026 | 5.586 |
+| Junho/2026 | 5.037 |
+| Julho/2026 | 5.878 |
+| Agosto/2026 | 6.937 |
+| Setembro/2026 | 6.206 |
+| **Total** | **82.724** |
+
+A validação comparou os dados armazenados no banco com os relatórios históricos de origem, mês a mês, considerando quantidade, quantidade de itens consolidados e valor calculado.
 
 O valor de compras utilizado pelo dashboard é calculado a partir de `quantidade × custo_unitario`. Por isso, pode haver pequenas diferenças em relação ao campo de valor total presente no relatório de origem.
+
+Quando o mesmo produto aparece mais de uma vez na mesma nota fiscal, fornecedor e data de entrada, o Compra360 mantém um único item, soma as quantidades e calcula o custo médio ponderado.
+
+Notas fiscais iguais do mesmo fornecedor em datas diferentes são tratadas como entradas distintas.
 
 ## Compatibilidade histórica de fornecedores
 
@@ -101,7 +124,7 @@ Transferências recebidas da Empresa 1 são registradas com o fornecedor técnic
 
 ## Próximas etapas
 
-- Completar o histórico de compras necessário para as análises.
 - Refinar os períodos e comparações do dashboard.
 - Evoluir os indicadores e alertas gerenciais.
+- Criar testes automatizados para as regras críticas dos importadores.
 - Continuar a validação dos dados antes da expansão das análises.
