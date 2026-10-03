@@ -216,10 +216,7 @@ def importar_dataframe(
     ##############################
 
     itens_existentes = (
-        db.query(
-            ItemEntrada.entrada_id,
-            ItemEntrada.produto_id,
-        )
+        db.query(ItemEntrada)
         .join(
             Entrada,
             ItemEntrada.entrada_id == Entrada.id,
@@ -232,11 +229,18 @@ def importar_dataframe(
 
     itens_cache = {
         (
-            entrada_id,
-            produto_id,
-        )
-        for entrada_id, produto_id in itens_existentes
+            item.entrada_id,
+            item.produto_id,
+        ): item
+        for item in itens_existentes
     }
+
+    # Guarda somente os itens criados durante esta execução.
+    #
+    # Isso permite consolidar linhas repetidas do mesmo produto
+    # dentro da mesma nota sem somar novamente itens que já
+    # existiam no banco antes da importação.
+    itens_criados_na_importacao = set()
 
     ##############################
     # IMPORTAÇÃO
@@ -360,7 +364,11 @@ def importar_dataframe(
             produto.id,
         )
 
-        if chave_item not in itens_cache:
+        item = itens_cache.get(
+            chave_item
+        )
+
+        if item is None:
 
             item = ItemEntrada(
                 entrada_id=entrada.id,
@@ -378,9 +386,49 @@ def importar_dataframe(
                 item=item,
             )
 
-            itens_cache.add(chave_item)
+            itens_cache[chave_item] = item
+            itens_criados_na_importacao.add(
+                chave_item
+            )
 
             itens_criados += 1
+
+        elif chave_item in itens_criados_na_importacao:
+
+            quantidade_anterior = float(
+                item.quantidade
+            )
+
+            custo_anterior = float(
+                item.custo
+            )
+
+            quantidade_total = (
+                quantidade_anterior
+                + float(quantidade)
+            )
+
+            valor_anterior = (
+                quantidade_anterior
+                * custo_anterior
+            )
+
+            valor_novo = (
+                float(quantidade)
+                * float(custo)
+            )
+
+            if quantidade_total != 0:
+                custo_medio = (
+                    valor_anterior
+                    + valor_novo
+                ) / quantidade_total
+            else:
+                custo_medio = 0.0
+
+            item.quantidade = quantidade_total
+            item.custo = custo_medio
+            item.custo_nota = custo_medio
 
     ##############################
     # COMMIT DA IMPORTAÇÃO
