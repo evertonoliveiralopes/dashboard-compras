@@ -206,6 +206,7 @@ def importar_dataframe(
         (
             str(entrada.nota_fiscal),
             entrada.fornecedor_id,
+            entrada.data_entrada,
         ): entrada
         for entrada in entradas_existentes
     }
@@ -304,6 +305,7 @@ def importar_dataframe(
         chave_entrada = (
             nota_fiscal,
             fornecedor.id,
+            data_entrada,
         )
 
         entrada = entradas_cache.get(
