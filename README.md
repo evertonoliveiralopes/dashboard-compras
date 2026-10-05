@@ -43,6 +43,18 @@ O Compra360 centraliza dados operacionais do supermercado e os transforma em inf
 
 O sistema possui importadores para os relatórios operacionais utilizados pelo Compra360.
 
+A Central de Importações utiliza um fluxo único para os diferentes tipos de dados. O usuário seleciona o tipo de importação, escolhe o arquivo correspondente e executa o processamento pela mesma interface.
+
+Tipos disponíveis:
+
+- Produtos;
+- Departamentos;
+- Fornecedores;
+- Entradas;
+- Vendas.
+
+O histórico de importações fica disponível na própria Central de Importações e é atualizado automaticamente após uma importação concluída com sucesso. O histórico não é exibido no dashboard, mantendo a tela gerencial focada em indicadores, análises e alertas.
+
 ### Entradas
 
 O importador de entradas:

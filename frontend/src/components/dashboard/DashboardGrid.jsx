@@ -7,7 +7,6 @@ import TopFornecedoresChart from "./charts/TopFornecedoresChart";
 import ComprasDepartamentoChart from "./charts/ComprasDepartamentoChart";
 
 import AlertasWidget from "./widgets/AlertasWidget";
-import UltimasImportacoes from "./widgets/UltimasImportacoes";
 
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
@@ -207,20 +206,6 @@ export default function DashboardGrid({
           <ComprasDepartamentoChart
             lojaId={lojaId}
           />
-        </Grid>
-
-      </Grid>
-
-
-      {/* Quarta linha */}
-      <Grid
-        container
-        spacing={3}
-        sx={{ mt: 1 }}
-      >
-
-        <Grid size={{ xs: 12 }}>
-          <UltimasImportacoes />
         </Grid>
 
       </Grid>

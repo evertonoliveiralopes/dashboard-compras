@@ -19,8 +19,9 @@ import CategoryIcon from "@mui/icons-material/Category";
 
 import { buscarUltimasImportacoes } from "../../../services/dashboardService";
 
-export default function UltimasImportacoes() {
-
+export default function UltimasImportacoes({
+  atualizacao = 0,
+}) {
   const [dados, setDados] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,7 +33,7 @@ export default function UltimasImportacoes() {
 
         const response = await buscarUltimasImportacoes();
 
-        console.log("Últimas importações:", response);
+        console.log("Histórico de Importações:", response);
 
         setDados(response);
 
@@ -53,7 +54,7 @@ export default function UltimasImportacoes() {
 
     carregarDados();
 
-  }, []);
+  }, [atualizacao]);
 
   function obterIcone(tipo) {
 
@@ -109,7 +110,7 @@ export default function UltimasImportacoes() {
         fontWeight="bold"
         mb={2}
       >
-        Últimas Importações
+        Histórico de Importações
       </Typography>
 
       {dados.length === 0 ? (
