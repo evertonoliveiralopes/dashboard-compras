@@ -46,12 +46,36 @@ def compras_mes(
     )
 
 @router.get("/top-fornecedores")
-def top_fornecedores(loja_id: int | None = Query(None), db: Session = Depends(get_db)):
-    return service.top_fornecedores(db, loja_id)
+def top_fornecedores(
+    loja_id: int | None = Query(None),
+    periodo: str = Query("mes"),
+    data_inicio: date | None = Query(None),
+    data_fim: date | None = Query(None),
+    db: Session = Depends(get_db),
+):
+    return service.top_fornecedores(
+        db=db,
+        loja_id=loja_id,
+        periodo=periodo,
+        data_inicio=data_inicio,
+        data_fim=data_fim,
+    )
 
 @router.get("/compras-departamento")
-def compras_por_departamento(loja_id: int | None = Query(None), db: Session = Depends(get_db)):
-    return service.compras_por_departamento(db, loja_id)
+def compras_por_departamento(
+    loja_id: int | None = Query(None),
+    periodo: str = Query("mes"),
+    data_inicio: date | None = Query(None),
+    data_fim: date | None = Query(None),
+    db: Session = Depends(get_db),
+):
+    return service.compras_por_departamento(
+        db=db,
+        loja_id=loja_id,
+        periodo=periodo,
+        data_inicio=data_inicio,
+        data_fim=data_fim,
+    )
 
 @router.get("/alertas")
 def alertas(

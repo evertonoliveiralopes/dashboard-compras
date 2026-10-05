@@ -169,11 +169,47 @@ class DashboardService:
             data_fim=periodos["data_fim"],
         )
 
-    def top_fornecedores(self, db: Session, loja_id=None):
-        return self.repository.top_fornecedores(db, loja_id)
+    def top_fornecedores(
+        self,
+        db: Session,
+        loja_id=None,
+        periodo="mes",
+        data_inicio=None,
+        data_fim=None,
+    ):
+        periodos = self.calcular_periodos(
+            periodo=periodo,
+            data_inicio=data_inicio,
+            data_fim=data_fim,
+        )
 
-    def compras_por_departamento(self, db: Session, loja_id=None):
-        return self.repository.compras_por_departamento(db, loja_id)
+        return self.repository.top_fornecedores(
+            db=db,
+            loja_id=loja_id,
+            data_inicio=periodos["data_inicio"],
+            data_fim=periodos["data_fim"],
+        )
+
+    def compras_por_departamento(
+        self,
+        db: Session,
+        loja_id=None,
+        periodo="mes",
+        data_inicio=None,
+        data_fim=None,
+    ):
+        periodos = self.calcular_periodos(
+            periodo=periodo,
+            data_inicio=data_inicio,
+            data_fim=data_fim,
+        )
+
+        return self.repository.compras_por_departamento(
+            db=db,
+            loja_id=loja_id,
+            data_inicio=periodos["data_inicio"],
+            data_fim=periodos["data_fim"],
+        )
 
     def alertas(self, db: Session, loja_id=None):
         return self.repository.alertas(db, loja_id)

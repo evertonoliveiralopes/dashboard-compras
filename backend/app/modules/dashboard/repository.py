@@ -104,7 +104,13 @@ class DashboardRepository:
             for linha in resultado
         ]
 
-    def top_fornecedores(self, db: Session, loja_id=None):
+    def top_fornecedores(
+        self,
+        db: Session,
+        loja_id=None,
+        data_inicio=None,
+        data_fim=None,
+    ):
         query = (
             db.query(
                 Fornecedor.nome_fantasia.label("fornecedor"),
@@ -127,6 +133,16 @@ class DashboardRepository:
                 Entrada.loja_id == loja_id
             )
 
+        if data_inicio:
+            query = query.filter(
+                Entrada.data_entrada >= data_inicio
+            )
+
+        if data_fim:
+            query = query.filter(
+                Entrada.data_entrada < data_fim
+            )
+
         resultado = (
             query
             .group_by(
@@ -143,13 +159,20 @@ class DashboardRepository:
 
         return [
             {
-                "fornecedor": linha.fornecedor or "Fornecedor não identificado",
+                "fornecedor": linha.fornecedor
+                or "Fornecedor não identificado",
                 "valor": float(linha.valor or 0),
             }
             for linha in resultado
         ]
 
-    def compras_por_departamento(self, db: Session, loja_id=None):
+    def compras_por_departamento(
+        self,
+        db: Session,
+        loja_id=None,
+        data_inicio=None,
+        data_fim=None,
+    ):
         query = (
             db.query(
                 Departamento.descricao.label("departamento"),
@@ -176,6 +199,16 @@ class DashboardRepository:
                 Entrada.loja_id == loja_id
             )
 
+        if data_inicio:
+            query = query.filter(
+                Entrada.data_entrada >= data_inicio
+            )
+
+        if data_fim:
+            query = query.filter(
+                Entrada.data_entrada < data_fim
+            )
+
         resultado = (
             query
             .group_by(
@@ -191,7 +224,8 @@ class DashboardRepository:
 
         return [
             {
-                "departamento": linha.departamento or "Sem departamento",
+                "departamento": linha.departamento
+                or "Sem departamento",
                 "valor": float(linha.valor or 0),
             }
             for linha in resultado

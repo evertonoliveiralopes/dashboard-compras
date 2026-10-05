@@ -191,6 +191,9 @@ export default function DashboardGrid({
         <Grid size={{ xs: 12, lg: 6 }}>
           <TopFornecedoresChart
             lojaId={lojaId}
+            periodo={periodo}
+            dataInicio={dataInicio}
+            dataFim={dataFim}
           />
         </Grid>
 
@@ -211,6 +214,9 @@ export default function DashboardGrid({
         <Grid size={{ xs: 12 }}>
           <ComprasDepartamentoChart
             lojaId={lojaId}
+            periodo={periodo}
+            dataInicio={dataInicio}
+            dataFim={dataFim}
           />
         </Grid>
 

@@ -39,6 +39,32 @@ O Compra360 centraliza dados operacionais do supermercado e os transforma em inf
 - Controle por loja
 - Autenticação via JWT
 
+## Dashboard gerencial
+
+O Dashboard centraliza os principais indicadores e análises para apoio à decisão de compras.
+
+O período selecionado no Dashboard é utilizado de forma integrada pelos indicadores e pelas análises de compras.
+
+Períodos disponíveis:
+
+- Mês;
+- 3 meses;
+- 6 meses;
+- 12 meses;
+- Personalizado.
+
+As análises de compras incluem:
+
+- evolução das compras por mês;
+- Top 5 fornecedores por valor comprado;
+- compras por departamento.
+
+A evolução das compras utiliza mês e ano como referência, evitando a consolidação incorreta de meses pertencentes a anos diferentes.
+
+Os valores de compras são calculados a partir de `quantidade × custo_unitario`.
+
+Os indicadores do período atual são comparados com o período anterior equivalente quando aplicável.
+
 ## Importação de dados
 
 O sistema possui importadores para os relatórios operacionais utilizados pelo Compra360.
@@ -136,7 +162,7 @@ Transferências recebidas da Empresa 1 são registradas com o fornecedor técnic
 
 ## Próximas etapas
 
-- Refinar os períodos e comparações do dashboard.
+- Concluir o período personalizado do dashboard com seleção de data inicial e final.
 - Evoluir os indicadores e alertas gerenciais.
 - Criar testes automatizados para as regras críticas dos importadores.
 - Continuar a validação dos dados antes da expansão das análises.

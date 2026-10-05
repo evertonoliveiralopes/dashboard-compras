@@ -24,22 +24,50 @@ export async function buscarComprasMes(
   return data;
 }
 
-export async function buscarTopFornecedores(lojaId) {
+export async function buscarTopFornecedores(
+  lojaId,
+  periodo,
+  dataInicio = null,
+  dataFim = null
+) {
+  const params = {
+    loja_id: lojaId,
+    periodo,
+  };
+
+  if (periodo === "personalizado") {
+    params.data_inicio = dataInicio;
+    params.data_fim = dataFim;
+  }
+
   const { data } = await api.get(
     "/dashboard/top-fornecedores",
-    {
-      params: { loja_id: lojaId },
-    }
+    { params }
   );
+
   return data;
 }
 
-export async function buscarComprasDepartamento(lojaId) {
+export async function buscarComprasDepartamento(
+  lojaId,
+  periodo,
+  dataInicio = null,
+  dataFim = null
+) {
+  const params = {
+    loja_id: lojaId,
+    periodo,
+  };
+
+  if (periodo === "personalizado") {
+    params.data_inicio = dataInicio;
+    params.data_fim = dataFim;
+  }
+
   const { data } = await api.get(
     "/dashboard/compras-departamento",
-    {
-      params: { loja_id: lojaId },
-    }
+    { params }
   );
+
   return data;
 }
