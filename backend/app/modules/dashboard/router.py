@@ -30,8 +30,20 @@ def indicadores(
     )
 
 @router.get("/compras-mes")
-def compras_mes(loja_id: int | None = Query(None), db: Session = Depends(get_db)):
-    return service.compras_por_mes(db, loja_id)
+def compras_mes(
+    loja_id: int | None = Query(None),
+    periodo: str = Query("mes"),
+    data_inicio: date | None = Query(None),
+    data_fim: date | None = Query(None),
+    db: Session = Depends(get_db),
+):
+    return service.compras_por_mes(
+        db=db,
+        loja_id=loja_id,
+        periodo=periodo,
+        data_inicio=data_inicio,
+        data_fim=data_fim,
+    )
 
 @router.get("/top-fornecedores")
 def top_fornecedores(loja_id: int | None = Query(None), db: Session = Depends(get_db)):

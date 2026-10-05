@@ -54,6 +54,9 @@ function formatarVariacao(valor) {
 export default function DashboardGrid({
   indicadores,
   lojaId,
+  periodo,
+  dataInicio,
+  dataFim,
 }) {
   const variacaoCompras =
     Number(indicadores.variacao_compras || 0);
@@ -171,6 +174,9 @@ export default function DashboardGrid({
       <Box sx={{ mt: 4 }}>
         <ComprasMesChart
           lojaId={lojaId}
+          periodo={periodo}
+          dataInicio={dataInicio}
+          dataFim={dataFim}
         />
       </Box>
 

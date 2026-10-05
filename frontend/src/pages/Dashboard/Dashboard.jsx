@@ -146,6 +146,9 @@ export default function Dashboard() {
       <DashboardGrid
         indicadores={indicadores}
         lojaId={lojaSelecionada?.id}
+        periodo={periodo}
+        dataInicio={dataInicio}
+        dataFim={dataFim}
       />
     </>
   );

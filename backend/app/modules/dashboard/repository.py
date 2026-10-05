@@ -35,15 +35,30 @@ class DashboardRepository:
 
         return query.count()
 
-    def compras_por_mes(self, db: Session, loja_id=None):
+    def compras_por_mes(
+        self,
+        db: Session,
+        loja_id=None,
+        data_inicio=None,
+        data_fim=None,
+    ):
+        ano = func.extract(
+            "year",
+            Entrada.data_entrada,
+        ).label("ano")
+
+        mes = func.extract(
+            "month",
+            Entrada.data_entrada,
+        ).label("mes")
+
         query = (
             db.query(
-                func.to_char(
-                    Entrada.data_entrada,
-                    "Mon"
-                ).label("mes"),
+                ano,
+                mes,
                 func.sum(
-                    ItemEntrada.quantidade * ItemEntrada.custo
+                    ItemEntrada.quantidade
+                    * ItemEntrada.custo
                 ).label("valor"),
             )
             .join(
@@ -57,47 +72,36 @@ class DashboardRepository:
                 Entrada.loja_id == loja_id
             )
 
+        if data_inicio:
+            query = query.filter(
+                Entrada.data_entrada >= data_inicio
+            )
+
+        if data_fim:
+            query = query.filter(
+                Entrada.data_entrada < data_fim
+            )
+
         resultado = (
             query
             .group_by(
-                func.to_char(
-                    Entrada.data_entrada,
-                    "Mon"
-                )
+                ano,
+                mes,
             )
             .order_by(
-                func.min(Entrada.data_entrada)
+                ano,
+                mes,
             )
             .all()
         )
 
-        meses = {
-            "Jan": 0,
-            "Fev": 0,
-            "Mar": 0,
-            "Abr": 0,
-            "Mai": 0,
-            "Jun": 0,
-            "Jul": 0,
-            "Ago": 0,
-            "Set": 0,
-            "Out": 0,
-            "Nov": 0,
-            "Dez": 0,
-        }
-
-        for linha in resultado:
-            mes = linha.mes.capitalize()[:3]
-
-            if mes in meses:
-                meses[mes] = float(linha.valor or 0)
-
         return [
             {
-                "mes": mes,
-                "valor": valor,
+                "ano": int(linha.ano),
+                "mes": int(linha.mes),
+                "valor": float(linha.valor or 0),
             }
-            for mes, valor in meses.items()
+            for linha in resultado
         ]
 
     def top_fornecedores(self, db: Session, loja_id=None):

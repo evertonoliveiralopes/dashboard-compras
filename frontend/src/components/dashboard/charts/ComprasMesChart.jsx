@@ -19,7 +19,34 @@ import {
 
 import { buscarComprasMes } from "../../../services/dashboardChartService";
 
-export default function ComprasMesChart({ lojaId }) {
+const NOMES_MESES = [
+  "Jan",
+  "Fev",
+  "Mar",
+  "Abr",
+  "Mai",
+  "Jun",
+  "Jul",
+  "Ago",
+  "Set",
+  "Out",
+  "Nov",
+  "Dez",
+];
+
+function formatarPeriodo(ano, mes) {
+  const nomeMes = NOMES_MESES[Number(mes) - 1];
+  const anoCurto = String(ano).slice(-2);
+
+  return `${nomeMes}/${anoCurto}`;
+}
+
+export default function ComprasMesChart({
+  lojaId,
+  periodo,
+  dataInicio,
+  dataFim, 
+}) {
 
   const [dados, setDados] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,12 +55,23 @@ export default function ComprasMesChart({ lojaId }) {
     async function carregarDados() {
       try {
         const response = await buscarComprasMes(
-          lojaId
+          lojaId,
+          periodo,
+          dataInicio,
+          dataFim
         );
 
         console.log("Compras por mês:", response);
 
-        setDados(response);
+        setDados(
+          response.map((item) => ({
+            ...item,
+            periodo: formatarPeriodo(
+              item.ano,
+              item.mes
+            ),
+          }))
+        );
       } catch (erro) {
         console.error("Erro ao carregar gráfico:", erro);
       } finally {
@@ -42,7 +80,12 @@ export default function ComprasMesChart({ lojaId }) {
     }
 
     carregarDados();
-  }, [lojaId]);
+  }, [
+    lojaId,
+    periodo,
+    dataInicio,
+    dataFim,
+  ]);
 
   if (loading) {
     return (
@@ -101,7 +144,7 @@ export default function ComprasMesChart({ lojaId }) {
           <LineChart data={dados}>
             <CartesianGrid strokeDasharray="3 3" />
 
-            <XAxis dataKey="mes" />
+            <XAxis dataKey="periodo" />
 
             <YAxis
               tickFormatter={(value) =>
