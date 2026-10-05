@@ -206,48 +206,82 @@ export default function MainLayout({ children }) {
           <Toolbar
             sx={{
               display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
+              alignItems: "stretch",
               justifyContent: "space-between",
+              gap: { xs: 1, sm: 0 },
               px: { xs: 1.5, sm: 3 },
+              py: { xs: 1, sm: 0 },
             }}
           >
+            {/* Linha principal: menu/título e usuário */}
             <Box
               sx={{
                 display: "flex",
                 alignItems: "center",
+                justifyContent: "space-between",
                 minWidth: 0,
               }}
             >
-              {isMobile && (
-                <IconButton
-                  edge="start"
-                  onClick={handleDrawerToggle}
-                  sx={{ mr: 1 }}
-                  aria-label="abrir menu"
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  minWidth: 0,
+                }}
+              >
+                {isMobile && (
+                  <IconButton
+                    edge="start"
+                    onClick={handleDrawerToggle}
+                    sx={{ mr: 1, flexShrink: 0 }}
+                    aria-label="abrir menu"
+                  >
+                    <MenuIcon />
+                  </IconButton>
+                )}
+
+                <Typography
+                  variant="h6"
+                  fontWeight="600"
+                  noWrap
                 >
-                  <MenuIcon />
+                  {tituloPagina}
+                </Typography>
+              </Box>
+
+              {isMobile && (
+                <IconButton sx={{ flexShrink: 0 }}>
+                  <Avatar>
+                    <AccountCircleIcon />
+                  </Avatar>
                 </IconButton>
               )}
-
-              <Typography
-                variant="h6"
-                fontWeight="600"
-                noWrap
-              >
-                {tituloPagina}
-              </Typography>
             </Box>
 
+            {/* Loja e usuário */}
             <Box
               sx={{
                 display: "flex",
                 alignItems: "center",
                 gap: { xs: 0.5, sm: 2 },
+                width: { xs: "100%", sm: "auto" },
               }}
             >
-              <SeletorLoja
-                lojaSelecionada={lojaSelecionada}
-                onChange={alterarLoja}
-              />
+              <Box
+                sx={{
+                  flex: { xs: 1, sm: "initial" },
+                  minWidth: 0,
+                  "& .MuiFormControl-root": {
+                    width: { xs: "100%", sm: "auto" },
+                  },
+                }}
+              >
+                <SeletorLoja
+                  lojaSelecionada={lojaSelecionada}
+                  onChange={alterarLoja}
+                />
+              </Box>
 
               <Typography
                 sx={{
@@ -257,11 +291,13 @@ export default function MainLayout({ children }) {
                 Administrador
               </Typography>
 
-              <IconButton>
-                <Avatar>
-                  <AccountCircleIcon />
-                </Avatar>
-              </IconButton>
+              {!isMobile && (
+                <IconButton>
+                  <Avatar>
+                    <AccountCircleIcon />
+                  </Avatar>
+                </IconButton>
+              )}
             </Box>
           </Toolbar>
         </AppBar>

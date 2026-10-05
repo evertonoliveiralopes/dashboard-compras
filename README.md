@@ -42,6 +42,7 @@ O Compra360 centraliza dados operacionais do supermercado e os transforma em inf
 ## Dashboard gerencial
 
 O Dashboard centraliza os principais indicadores e análises para apoio à decisão de compras.
+O cabeçalho possui layout responsivo para dispositivos móveis, mantendo o menu de navegação, a identificação da página, o seletor de loja e o acesso do usuário organizados sem sobreposição em telas menores.
 
 O período selecionado no Dashboard é utilizado de forma integrada pelos indicadores e pelas análises de compras.
 
