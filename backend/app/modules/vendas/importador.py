@@ -155,3 +155,18 @@ def importar_dataframe(
         "atualizados": 0,
         "erros": erros,
     }
+
+def consolidar_vendas(df: pd.DataFrame) -> pd.DataFrame:
+    """Consolida vendas por loja, data e produto."""
+    return (
+        df.groupby(
+            ["loja_id", "data", "codigo_produto"],
+            as_index=False,
+            sort=False,
+            dropna=False,
+        )
+        .agg(
+            quantidade=("quantidade", "sum"),
+            valor_total=("valor_total", "sum"),
+        )
+    )

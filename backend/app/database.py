@@ -10,6 +10,8 @@ DB_PORT = os.getenv("DB_PORT")
 DB_NAME = os.getenv("DB_NAME")
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_SSLMODE = os.getenv("DB_SSLMODE")
+
 
 if DB_HOST and DB_HOST.startswith("/cloudsql/"):
     DATABASE_URL = (
@@ -29,7 +31,16 @@ else:
         f"@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     )
 
-    engine = create_engine(DATABASE_URL)
+    connect_args = {}
+
+    if DB_SSLMODE:
+        connect_args["sslmode"] = DB_SSLMODE
+
+    engine = create_engine(
+        DATABASE_URL,
+        connect_args=connect_args,
+    )
+
 
 SessionLocal = sessionmaker(
     autocommit=False,

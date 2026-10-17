@@ -167,3 +167,41 @@ Transferências recebidas da Empresa 1 são registradas com o fornecedor técnic
 - Evoluir os indicadores e alertas gerenciais.
 - Criar testes automatizados para as regras críticas dos importadores.
 - Continuar a validação dos dados antes da expansão das análises.
+
+## Ambiente de desenvolvimento local
+
+A partir de outubro de 2026, o desenvolvimento do Compra360 será realizado localmente, sem depender dos serviços do Google Cloud.
+
+- Backend: FastAPI executado na máquina de desenvolvimento.
+- Frontend: React/Vite executado localmente.
+- Banco de dados: PostgreSQL local.
+- Versionamento: Git.
+
+A infraestrutura anteriormente utilizada no Google Cloud permanece documentada como referência histórica, mas não é necessária para o desenvolvimento local.
+
+A configuração de conexão com o PostgreSQL será realizada por variáveis de ambiente. O parâmetro DB_SSLMODE é opcional.
+
+### Consolidação de vendas — Em desenvolvimento
+
+O objetivo é preservar pelo menos seis meses de histórico de vendas das três lojas, reduzindo o armazenamento necessário.
+
+Foi criada a função consolidar_vendas(), que agrupa registros por loja, data e código do produto, somando quantidades e valores vendidos.
+
+Dois testes automatizados foram executados com sucesso, validando:
+
+- Preservação de quantidades, faturamento e devoluções negativas.
+- Separação dos registros por loja, data e produto.
+
+A função ainda não está integrada ao importador de produção.
+
+Como os relatórios do Arius podem conter vendas já apresentadas em relatórios anteriores, o tratamento seguro de reimportações ainda precisa ser implementado.
+
+Nenhuma migração ou substituição de registros históricos foi realizada por essa funcionalidade.
+
+### Próximas atividades do ambiente local
+
+- Validar a conexão com o PostgreSQL instalado na máquina.
+- Verificar a estrutura e os dados do banco local existente.
+- Concluir a consolidação e a proteção contra duplicidade na importação de vendas.
+- Importar e validar os dados das três lojas.
+- Executar e validar backend e frontend localmente.

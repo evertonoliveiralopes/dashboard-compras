@@ -8,7 +8,8 @@ import {
   InputLabel,
   MenuItem,
   Select,
-  Typography,
+  TextField,
+  Typography
 } from "@mui/material";
 
 import { buscarIndicadores } from "../../services/dashboardService";
@@ -56,6 +57,13 @@ export default function Dashboard() {
 
   useEffect(() => {
     async function carregar() {
+      if (
+        periodo === "personalizado" &&
+        (!dataInicio || !dataFim)
+      ) {
+        setLoading(false);
+        return;
+      }
       try {
         setLoading(true);
 
@@ -141,6 +149,38 @@ export default function Dashboard() {
             </MenuItem>
           </Select>
         </FormControl>
+        {periodo === "personalizado" && (
+          <>
+            <TextField
+              label="Data inicial"
+              type="date"
+              size="small"
+              value={dataInicio || ""}
+              onChange={(evento) => {
+                setDataInicio(evento.target.value || null);
+              }}
+              InputLabelProps={{
+                shrink: true,
+              }}
+            />
+
+            <TextField
+              label="Data final"
+              type="date"
+              size="small"
+              value={dataFim || ""}
+              onChange={(evento) => {
+                setDataFim(evento.target.value || null);
+              }}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              inputProps={{
+                min: dataInicio || undefined,
+              }}
+            />
+          </>
+      )}
       </Box>
 
       <DashboardGrid
