@@ -34,6 +34,12 @@ class Venda(Base):
 
     margem = Column(Numeric(10, 2))
 
+    desconto = Column(Numeric(14, 2))
+
+    valor_liquido = Column(Numeric(14, 2))
+
+    chave_origem = Column(String(64))
+
     loja_id = Column(Integer, ForeignKey("lojas.id"), nullable=True)
 
     loja = relationship("Loja", back_populates="vendas")

@@ -205,3 +205,37 @@ Nenhuma migração ou substituição de registros históricos foi realizada por 
 - Concluir a consolidação e a proteção contra duplicidade na importação de vendas.
 - Importar e validar os dados das três lojas.
 - Executar e validar backend e frontend localmente.
+
+
+## Importa??o consolidada de vendas
+
+O Compra360 importa relat?rios anal?ticos de vendas do Arius por loja.
+
+### Regras de processamento
+
+- Leitura de CSV com separador `;`, codifica??o Latin-1 e campos preservados como texto.
+- Valida??o integral do relat?rio antes de substituir vendas existentes.
+- Consolida??o por loja, data e c?digo do produto.
+- Utiliza??o de `Decimal` para preservar a precis?o de quantidades e valores.
+- Preserva??o de vendas negativas e devolu??es.
+- Substitui??o somente dos dias presentes no relat?rio da loja selecionada.
+- Identifica??o determin?stica dos registros consolidados.
+- Grava??o das vendas e do hist?rico em uma ?nica transa??o.
+- Rollback em caso de falha, evitando importa??es parcialmente confirmadas.
+
+### Reimporta??o
+
+Os relat?rios do Arius devem conter todas as vendas dos dias selecionados.
+
+Ao reimportar um per?odo, os registros anteriores desses dias e dessa loja
+s?o substitu?dos pelos novos dados consolidados, sem duplicar o faturamento.
+
+### Valida??es realizadas
+
+- Testes automatizados de consolida??o aprovados.
+- Confer?ncia dos totais do relat?rio real de setembro de 2026.
+- Teste de reimporta??o sem duplicidade.
+- Rejei??o de relat?rios inv?lidos.
+- Teste de rollback com falha simulada de grava??o.
+- Teste HTTP 422 do endpoint `/vendas/importar`.
+

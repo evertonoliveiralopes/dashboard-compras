@@ -25,6 +25,7 @@ async def importar_vendas(
             arquivo.file,
             sep=";",
             encoding="latin1",
+            dtype=str,
             low_memory=False,
         )
     else:
@@ -42,28 +43,43 @@ async def importar_vendas(
             detail="Loja não encontrada ou inativa",
         )
 
-    resultado = importar_dataframe(
-        df,
-        db,
-        loja_id,
-        arquivo.filename,
-    )
+    try:
+        resultado = importar_dataframe(
+            df,
+            db,
+            loja_id,
+            arquivo.filename,
+        )
 
-    historico = HistoricoImportacao(
-        tipo="Vendas",
-        loja_id=loja_id,
-        arquivo=arquivo.filename,
-        registros=len(df),
-        inseridos=resultado.get("inseridos", 0),
-        atualizados=resultado.get("atualizados", 0),
-        erros=resultado.get("erros", 0),
-        status="SUCESSO",
-    )
+        historico = HistoricoImportacao(
+            tipo="Vendas",
+            loja_id=loja_id,
+            arquivo=arquivo.filename,
+            registros=len(df),
+            inseridos=resultado.get("inseridos", 0),
+            atualizados=resultado.get("atualizados", 0),
+            erros=resultado.get("erros", 0),
+            status="SUCESSO",
+        )
 
-    db.add(historico)
-    db.commit()
+        db.add(historico)
+        db.commit()
 
-    return resultado
+        return resultado
+
+    except ValueError as erro:
+        db.rollback()
+        from fastapi import HTTPException
+        raise HTTPException(
+            status_code=422,
+            detail=str(erro),
+        ) from erro
+
+    except Exception:
+        db.rollback()
+        raise
+
+
 @router.get("/faturamento")
 def obter_faturamento(
     loja_id: int | None = None,

@@ -1,4 +1,5 @@
 import pandas as pd
+from decimal import Decimal, InvalidOperation
 
 from app.utils.codigo_produto import normalizar_codigo_produto
 from app.models.venda import Venda
@@ -31,23 +32,22 @@ def limpar_decimal(valor):
     if pd.isna(valor):
         return None
 
+    if isinstance(valor, Decimal):
+        return valor
+
     if isinstance(valor, (int, float)):
-        return float(valor)
+        return Decimal(str(valor))
 
-    valor = str(valor).strip()
+    texto = str(valor).strip()
 
-    if valor == "":
+    if not texto:
         return None
 
-    valor = (
-        valor
-        .replace(".", "")
-        .replace(",", ".")
-    )
+    texto = texto.replace(".", "").replace(",", ".")
 
     try:
-        return float(valor)
-    except (ValueError, TypeError):
+        return Decimal(texto)
+    except InvalidOperation:
         return None
 
 
@@ -71,90 +71,66 @@ def importar_dataframe(
     loja_id: int,
     nome_arquivo: str,
 ):
-    colunas_ausentes = [
-        coluna
-        for coluna in COLUNAS_OBRIGATORIAS
-        if coluna not in df.columns
-    ]
+    """Prepara e substitui vendas por loja e dia, sem confirmar a transacao."""
+    from hashlib import sha256
 
-    if colunas_ausentes:
-        raise ValueError(
-            "Colunas obrigatórias ausentes: "
-            + ", ".join(colunas_ausentes)
+    # Toda a validacao acontece antes de excluir vendas existentes.
+    consolidado = preparar_vendas_consolidadas(df, loja_id)
+
+    datas = consolidado["data"].drop_duplicates().tolist()
+
+    vendas = []
+
+    for linha in consolidado.itertuples(index=False):
+        quantidade = linha.quantidade
+        valor_total = linha.valor_total
+
+        valor_unitario = None
+        if quantidade != 0:
+            valor_unitario = (
+                valor_total / quantidade
+            ).quantize(Decimal("0.0001"))
+
+        chave = sha256(
+            f"{loja_id}|{linha.data.isoformat()}|"
+            f"{linha.codigo_produto}".encode("utf-8")
+        ).hexdigest()
+
+        vendas.append(
+            Venda(
+                empresa=f"LOJA {loja_id}",
+                loja_id=loja_id,
+                data=linha.data,
+                codigo_produto=linha.codigo_produto,
+                descricao=linha.descricao,
+                quantidade=quantidade,
+                valor_unitario=valor_unitario,
+                valor_total=valor_total,
+                valor_liquido=valor_total,
+                chave_origem=chave,
+            )
         )
 
-    inseridos = 0
-    erros = 0
+    # Substitui exclusivamente os dias presentes no arquivo.
+    db.query(Venda).filter(
+        Venda.loja_id == loja_id,
+        Venda.data.in_(datas),
+    ).delete(synchronize_session=False)
 
-    for inicio in range(0, len(df), TAMANHO_LOTE):
-        lote = df.iloc[
-            inicio:inicio + TAMANHO_LOTE
-        ]
-
-        vendas = []
-
-        for _, linha in lote.iterrows():
-            data = limpar_data(linha["DATA_HORA"])
-            codigo_produto = normalizar_codigo_produto(
-                linha["PRODUTO"]
-            )
-            quantidade = limpar_decimal(linha["QTDE"])
-            valor_total = limpar_decimal(linha["LIQUIDO"])
-
-            if (
-                data is None
-                or codigo_produto is None
-                or quantidade is None
-                or valor_total is None
-            ):
-                erros += 1
-                continue
-
-            valor_unitario = None
-
-            if quantidade != 0:
-                valor_unitario = (
-                    valor_total / quantidade
-                )
-
-            vendas.append(
-                Venda(
-                    empresa=f"LOJA {loja_id}",
-                    loja_id=loja_id,
-                    data=data,
-                    codigo_produto=codigo_produto,
-                    descricao=limpar_texto(
-                        linha["DESCRITIVO"]
-                    ),
-                    unidade=None,
-                    qtde_embalagem=None,
-                    quantidade=quantidade,
-                    valor_unitario=valor_unitario,
-                    valor_total=valor_total,
-                    custo_unitario=None,
-                    custo_total=None,
-                    margem=None,
-                )
-            )
-
-        if vendas:
-            db.add_all(vendas)
-            db.commit()
-            inseridos += len(vendas)
-
-        print(
-            f"Importação de vendas: "
-            f"{min(inicio + TAMANHO_LOTE, len(df))}/"
-            f"{len(df)} registros processados"
-        )
+    # Flush envia os dados ao PostgreSQL, mas nao confirma a transacao.
+    for inicio in range(0, len(vendas), TAMANHO_LOTE):
+        db.add_all(vendas[inicio:inicio + TAMANHO_LOTE])
+        db.flush()
 
     return {
         "status": "ok",
-        "registros_importados": inseridos,
-        "inseridos": inseridos,
+        "registros_importados": len(df),
+        "inseridos": len(vendas),
         "atualizados": 0,
-        "erros": erros,
+        "erros": 0,
+        "dias_substituidos": len(datas),
     }
+
 
 def consolidar_vendas(df: pd.DataFrame) -> pd.DataFrame:
     """Consolida vendas por loja, data e produto."""
@@ -169,4 +145,50 @@ def consolidar_vendas(df: pd.DataFrame) -> pd.DataFrame:
             quantidade=("quantidade", "sum"),
             valor_total=("valor_total", "sum"),
         )
+    )
+
+
+def preparar_vendas_consolidadas(df: pd.DataFrame, loja_id: int) -> pd.DataFrame:
+    """Valida e consolida integralmente o relat?rio antes da grava??o."""
+    if df.empty:
+        raise ValueError("O relat?rio de vendas est? vazio.")
+
+    ausentes = [c for c in COLUNAS_OBRIGATORIAS if c not in df.columns]
+    if ausentes:
+        raise ValueError("Colunas obrigat?rias ausentes: " + ", ".join(ausentes))
+
+    registros = pd.DataFrame({
+        "loja_id": loja_id,
+        "data": df["DATA_HORA"].map(limpar_data),
+        "codigo_produto": df["PRODUTO"].map(normalizar_codigo_produto),
+        "descricao": df["DESCRITIVO"].map(limpar_texto),
+        "quantidade": df["QTDE"].map(limpar_decimal),
+        "valor_total": df["LIQUIDO"].map(limpar_decimal),
+    })
+
+    campos = ["data", "codigo_produto", "quantidade", "valor_total"]
+    invalidos = registros[campos].isna().any(axis=1)
+
+    if invalidos.any():
+        raise ValueError(
+            f"Relat?rio cont?m {int(invalidos.sum())} linhas inv?lidas. "
+            "Nenhuma venda deve ser substitu?da."
+        )
+
+    descricoes = (
+        registros.groupby(
+            ["loja_id", "data", "codigo_produto"],
+            sort=False,
+        )["descricao"]
+        .first()
+        .reset_index()
+    )
+
+    consolidado = consolidar_vendas(registros)
+
+    return consolidado.merge(
+        descricoes,
+        on=["loja_id", "data", "codigo_produto"],
+        how="left",
+        validate="one_to_one",
     )
