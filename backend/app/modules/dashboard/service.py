@@ -122,13 +122,34 @@ class DashboardService:
         else:
             variacao_compras = 0
 
-        if vendas_anterior:
-            variacao_vendas = (
-                (vendas_atual - vendas_anterior)
-                / vendas_anterior
-            ) * 100
+        # Compara os ultimos 30 dias com os 30 dias anteriores.
+        # O periodo selecionado no dashboard nao afeta esta variacao.
+        hoje = date.today()
+        fim_30 = hoje + timedelta(days=1)
+        inicio_30 = fim_30 - timedelta(days=30)
+        inicio_anteriores = inicio_30 - timedelta(days=30)
+
+        vendas_30, dias_30 = self.repository.vendas_intervalo(
+            db, loja_id, inicio_30, fim_30
+        )
+
+        vendas_30_anteriores, dias_anteriores = (
+            self.repository.vendas_intervalo(
+                db, loja_id, inicio_anteriores, inicio_30
+            )
+        )
+
+        if (
+            dias_30 == 30
+            and dias_anteriores == 30
+            and vendas_30_anteriores > 0
+        ):
+            variacao_vendas = float(
+                (vendas_30 - vendas_30_anteriores)
+                / vendas_30_anteriores * 100
+            )
         else:
-            variacao_vendas = 0
+            variacao_vendas = None
 
         return {
             "valor_comprado": compras_atual,

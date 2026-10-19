@@ -1,4 +1,4 @@
-﻿# Compra360
+# Compra360
 
 Plataforma web para gestão estratégica de compras, vendas, estoque e fornecedores.
 
@@ -252,3 +252,30 @@ s?o substitu?dos pelos novos dados consolidados, sem duplicar o faturamento.
 - Quantidade vendida: 377.250,250.
 - Faturamento liquido: R$ 2.567.791,94.
 - Resultado: totais conferidos com o CSV original.
+
+## Indicador de Variacao de Vendas - Ultimos 30 Dias
+
+O Dashboard apresenta um indicador de variacao percentual da quantidade vendida.
+
+### Regra de calculo
+
+- Periodo atual: ultimos 30 dias corridos, incluindo a data atual.
+- Periodo anterior: 30 dias imediatamente anteriores.
+- Metrica: quantidade vendida.
+- Formula: ((quantidade atual - quantidade anterior) / quantidade anterior) * 100.
+- O indicador independe do filtro de periodo selecionado no Dashboard.
+- O indicador Quantidade Vendida continua respeitando o filtro selecionado.
+
+### Tratamento de dados insuficientes
+
+- O calculo exige registros de vendas em todos os 30 dias de cada intervalo.
+- Se faltar algum dia ou a quantidade anterior for zero, a API retorna null.
+- O frontend apresenta um traco e um icone cinza quando nao existe variacao calculavel.
+- A verificacao de dias com registros nao garante, isoladamente, a integridade das importacoes.
+
+### Validacoes realizadas
+
+- Compilacao Python do modulo Dashboard.
+- Teste com historico insuficiente.
+- Teste simulado de crescimento de 1.000 para 1.200 unidades: +20%.
+- Compilacao de producao do frontend com Vite.

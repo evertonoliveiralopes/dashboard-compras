@@ -12,6 +12,7 @@ import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
+import RemoveIcon from "@mui/icons-material/Remove";
 import PaidIcon from "@mui/icons-material/Paid";
 
 
@@ -37,7 +38,9 @@ function formatarNumero(valor) {
 
 
 function formatarVariacao(valor) {
-  const numero = Number(valor || 0);
+  if (valor === null || valor === undefined) return "\u2014";
+
+  const numero = Number(valor);
 
   const sinal = numero > 0 ? "+" : "";
 
@@ -62,7 +65,9 @@ export default function DashboardGrid({
     Number(indicadores.variacao_compras || 0);
 
   const variacaoVendas =
-    Number(indicadores.variacao_vendas || 0);
+    indicadores.variacao_vendas == null
+      ? null
+      : Number(indicadores.variacao_vendas);
 
   return (
     <>
@@ -128,12 +133,14 @@ export default function DashboardGrid({
 
         <Grid size={{ xs: 12, md: 6, lg: 2 }}>
           <KPICard
-            titulo="Variação Vendas"
+            titulo={"Varia\u00e7\u00e3o de Vendas nos \u00daltimos 30 Dias"}
             valor={formatarVariacao(
               variacaoVendas
             )}
             icone={
-              variacaoVendas >= 0 ? (
+              variacaoVendas === null ? (
+                <RemoveIcon fontSize="large" />
+              ) : variacaoVendas >= 0 ? (
                 <TrendingUpIcon
                   fontSize="large"
                 />
@@ -144,9 +151,11 @@ export default function DashboardGrid({
               )
             }
             cor={
-              variacaoVendas >= 0
-                ? "#2E7D32"
-                : "#C62828"
+              variacaoVendas === null
+                ? "#757575"
+                : variacaoVendas >= 0
+                  ? "#2E7D32"
+                  : "#C62828"
             }
           />
         </Grid>

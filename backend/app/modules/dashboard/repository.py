@@ -397,6 +397,27 @@ class DashboardRepository:
 
         return float(resultado)
 
+
+    def vendas_intervalo(
+        self,
+        db: Session,
+        loja_id,
+        data_inicio,
+        data_fim,
+    ):
+        return (
+            db.query(
+                func.coalesce(func.sum(Venda.quantidade), 0),
+                func.count(func.distinct(Venda.data)),
+            )
+            .filter(
+                Venda.loja_id == loja_id,
+                Venda.data >= data_inicio,
+                Venda.data < data_fim,
+            )
+            .one()
+        )
+
     def indicadores_periodo(
         self,
         db: Session,
