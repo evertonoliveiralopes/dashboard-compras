@@ -239,3 +239,16 @@ s?o substitu?dos pelos novos dados consolidados, sem duplicar o faturamento.
 - Teste de rollback com falha simulada de grava??o.
 - Teste HTTP 422 do endpoint `/vendas/importar`.
 
+
+### Validacao da importacao de vendas - Outubro/2026
+
+- Frontend local envia o CSV completo em uma unica requisicao.
+- Removido o fracionamento em blocos de 4 MB, anteriormente utilizado no Cloud Run.
+- Backend consolida vendas por loja, data e produto.
+- Reimportacao substitui registros existentes das datas presentes no arquivo.
+- Teste real: setembro/2026, Loja 001.
+- Registros originais: 395.727.
+- Registros consolidados: 67.000.
+- Quantidade vendida: 377.250,250.
+- Faturamento liquido: R$ 2.567.791,94.
+- Resultado: totais conferidos com o CSV original.
