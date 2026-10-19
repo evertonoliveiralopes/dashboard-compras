@@ -279,3 +279,46 @@ O Dashboard apresenta um indicador de variacao percentual da quantidade vendida.
 - Teste com historico insuficiente.
 - Teste simulado de crescimento de 1.000 para 1.200 unidades: +20%.
 - Compilacao de producao do frontend com Vite.
+
+## Configuracao de Alertas por Usuario
+
+O Compra360 permite que cada usuario configure individualmente os tipos de alertas e os departamentos monitorados.
+
+### Tipos de alertas configuraveis
+
+- Alteracao de preco de compra: habilitar ou desabilitar e definir o percentual minimo de variacao.
+- Estoque minimo: habilitar ou desabilitar e definir a quantidade minima, incluindo valores fracionarios.
+- Produto sem movimentacao: habilitar ou desabilitar e definir a quantidade minima de dias sem venda.
+
+### Valores padrao
+
+| Parametro | Valor padrao |
+| --- | ---: |
+| Variacao minima de preco | 10% |
+| Quantidade minima de estoque | 20 |
+| Dias sem venda | 30 |
+
+### Persistencia e validacoes
+
+- As preferencias sao vinculadas ao usuario autenticado.
+- Os departamentos monitorados sao armazenados separadamente dos tipos de alertas.
+- As configuracoes sao carregadas pela API ao abrir a tela.
+- Os parametros numericos sao salvos no PostgreSQL e recuperados apos atualizar a pagina.
+- O percentual de preco deve estar entre 0 e 100.
+- A quantidade minima de estoque deve ser maior ou igual a zero.
+- Os dias sem venda devem ser um numero inteiro maior ou igual a 1.
+- A migracao Alembic `191127f58bc6` adiciona os tres parametros numericos a tabela `config_tipos_alertas`.
+
+### Validacoes realizadas
+
+- Migracao aplicada e estrutura conferida no PostgreSQL local.
+- Modelo SQLAlchemy e schemas Pydantic validados.
+- Testes do servico para valores padrao e personalizados.
+- Compilacao de producao do frontend com Vite.
+- Salvamento pela interface e recuperacao apos atualizar a pagina.
+- Consulta direta ao PostgreSQL confirmou os valores personalizados do usuario.
+
+### Integracao pendente
+
+As configuracoes estao persistidas e disponiveis pela API, mas ainda precisam ser aplicadas as regras de geracao dos alertas apresentados no Dashboard, respeitando os tipos habilitados, os limites definidos, os departamentos selecionados e a loja em consulta.
+

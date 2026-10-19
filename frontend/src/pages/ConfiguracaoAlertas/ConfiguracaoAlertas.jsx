@@ -23,7 +23,15 @@ export default function ConfiguracaoAlertas() {
   const [departamentos, setDepartamentos] = useState([]);
   const [departamentosSelecionados, setDepartamentosSelecionados] = useState([]);
   const [usuario, setUsuario] = useState(null);
-  const [tiposAlertas, setTiposAlertas] = useState({  alteracao_preco: true,  estoque_minimo: false,  sem_movimentacao: true,});
+  const [tiposAlertas, setTiposAlertas] = useState({  
+    alteracao_preco: true,  
+    estoque_minimo: false,  
+    sem_movimentacao: true,
+    sem_movimentacao: true,
+    percentual_alteracao_preco: 10,
+    quantidade_minima_estoque: 20,
+    dias_sem_venda: 30,
+  });
 
  useEffect(() => {
     async function carregarTela() {
@@ -83,6 +91,37 @@ export default function ConfiguracaoAlertas() {
 
   async function salvarConfiguracoes() {
     try {
+      const percentual = Number(tiposAlertas.percentual_alteracao_preco);
+      const estoque = Number(tiposAlertas.quantidade_minima_estoque);
+      const dias = Number(tiposAlertas.dias_sem_venda);
+
+      if (
+        tiposAlertas.percentual_alteracao_preco === "" ||
+        !Number.isFinite(percentual) ||
+        percentual < 0 ||
+        percentual > 100
+      ) {
+        alert("Informe uma variação de preço entre 0% e 100%.");
+        return;
+      }
+
+      if (
+        tiposAlertas.quantidade_minima_estoque === "" ||
+        !Number.isFinite(estoque) ||
+        estoque < 0
+      ) {
+        alert("Informe uma quantidade mínima de estoque válida.");
+        return;
+      }
+
+      if (
+        tiposAlertas.dias_sem_venda === "" ||
+        !Number.isInteger(dias) ||
+        dias < 1
+      ) {
+        alert("Informe um número inteiro de dias sem venda, a partir de 1.");
+        return;
+      }
       const payload = departamentos.map((departamento) => ({
         departamento_id: departamento.id,
         ativo: departamentosSelecionados.includes(
@@ -183,7 +222,21 @@ export default function ConfiguracaoAlertas() {
                 <TextField
                   size="small"
                   label="Variação mínima (%)"
-                  defaultValue="10"
+                  type="number"
+                  value={tiposAlertas.percentual_alteracao_preco ?? ""}
+                  onChange={(event) =>
+                    setTiposAlertas((anterior) => ({
+                      ...anterior,
+                      percentual_alteracao_preco: event.target.value,
+                    }))
+                  }
+                  slotProps={{
+                    htmlInput: {
+                      min: 0,
+                      max: 100,
+                      step: 0.01,
+                    },
+                  }}
                   sx={{
                     width: 180,
                   }}
@@ -218,7 +271,20 @@ export default function ConfiguracaoAlertas() {
                 <TextField
                   size="small"
                   label="Quantidade mínima"
-                  defaultValue="20"
+                  type="number"
+                  value={tiposAlertas.quantidade_minima_estoque ?? ""}
+                  onChange={(event) =>
+                    setTiposAlertas((anterior) => ({
+                      ...anterior,
+                      quantidade_minima_estoque: event.target.value,
+                    }))
+                  }
+                  slotProps={{
+                    htmlInput: {
+                      min: 0,
+                      step: 0.001,
+                    },
+                  }}
                   sx={{
                     width: 180,
                   }}
@@ -253,7 +319,20 @@ export default function ConfiguracaoAlertas() {
                 <TextField
                   size="small"
                   label="Dias sem venda"
-                  defaultValue="30"
+                  type="number"
+                  value={tiposAlertas.dias_sem_venda ?? ""}
+                  onChange={(event) =>
+                    setTiposAlertas((anterior) => ({
+                      ...anterior,
+                      dias_sem_venda: event.target.value,
+                    }))
+                  }
+                  slotProps={{
+                    htmlInput: {
+                      min: 1,
+                      step: 1,
+                    },
+                  }}
                   sx={{
                     width: 180,
                   }}
