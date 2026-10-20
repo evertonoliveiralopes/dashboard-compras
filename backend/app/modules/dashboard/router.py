@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from .service import DashboardService
 from datetime import date
+from app.models.usuario import Usuario
+from app.modules.auth.security import get_current_user
 
 router = APIRouter(
     prefix="/dashboard",
@@ -80,9 +82,14 @@ def compras_por_departamento(
 @router.get("/alertas")
 def alertas(
     loja_id: int | None = Query(None),
+    usuario: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return service.alertas(db, loja_id)
+    return service.alertas(
+        db=db,
+        loja_id=loja_id,
+        usuario_id=usuario.id,
+    )
 
 @router.get("/ultimas-importacoes")
 def ultimas_importacoes(

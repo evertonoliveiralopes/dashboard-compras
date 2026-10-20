@@ -232,8 +232,8 @@ class DashboardService:
             data_fim=periodos["data_fim"],
         )
 
-    def alertas(self, db: Session, loja_id=None):
-        return self.repository.alertas(db, loja_id)
+    def alertas(self, db: Session, loja_id=None, usuario_id=None,):
+        return self.repository.alertas(db=db, loja_id=loja_id, usuario_id=usuario_id,)
 
     def ultimas_importacoes(self, db: Session, loja_id=None):
         return self.repository.ultimas_importacoes(db, loja_id)

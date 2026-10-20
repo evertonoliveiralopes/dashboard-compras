@@ -9,6 +9,8 @@ from app.models.entrada import Entrada
 from app.models.departamento import Departamento
 from app.models.historico_importacao import HistoricoImportacao
 from app.models.venda import Venda
+from app.modules.config_alertas.service import ConfigAlertaService
+from datetime import date, timedelta
 
 
 class DashboardRepository:
@@ -231,8 +233,38 @@ class DashboardRepository:
             for linha in resultado
         ]
 
-    def alertas(self, db: Session, loja_id=None):
+    def alertas(self, db: Session, loja_id=None, usuario_id=None):
+        
+        config_service = ConfigAlertaService()
 
+        tipos_configurados = config_service.listar_tipos(
+            db,
+            usuario_id,
+        )
+
+        departamentos_configurados = config_service.listar(
+            db,
+            usuario_id,
+        )
+        
+        departamentos_ativos_ids = [
+            configuracao.departamento_id
+            for configuracao in departamentos_configurados
+            if configuracao.ativo
+        ]
+        
+        departamentos_ativos_codigos = []
+
+        if departamentos_ativos_ids:
+            departamentos_ativos_codigos = [
+                codigo
+                for (codigo,) in (
+                    db.query(Departamento.codigo)
+                    .filter(Departamento.id.in_(departamentos_ativos_ids))
+                    .all()
+                )
+            ]
+        
         alertas = []
 
         produtos_sem_estoque_query = (
@@ -242,7 +274,8 @@ class DashboardRepository:
                 Produto.id == ProdutoLoja.produto_id,
             )
             .filter(
-                ProdutoLoja.estoque_atual <= 0
+                ProdutoLoja.estoque_atual
+                < tipos_configurados["quantidade_minima_estoque"]
             )
         )
 
@@ -250,21 +283,28 @@ class DashboardRepository:
             produtos_sem_estoque_query = produtos_sem_estoque_query.filter(
                 ProdutoLoja.loja_id == loja_id
             )
-
+        if departamentos_configurados:
+            produtos_sem_estoque_query = produtos_sem_estoque_query.filter(
+                Produto.departamento.in_(departamentos_ativos_codigos)
+            )
         produtos_sem_estoque = (
             produtos_sem_estoque_query
             .limit(10)
             .all()
         )
-
-        for produto in produtos_sem_estoque:
-            alertas.append(
-                {
-                    "tipo": "SEM_ESTOQUE",
-                    "produto": produto.descricao,
-                    "detalhe": "Estoque atual: 0",
-                }
-            )
+        
+        if tipos_configurados["estoque_minimo"]:
+            for produto in produtos_sem_estoque:
+                alertas.append(
+                    {
+                        "tipo": "SEM_ESTOQUE",
+                        "produto": produto.descricao,
+                        "detalhe": (
+                            "Estoque abaixo do mínimo configurado: "
+                            f"{tipos_configurados['quantidade_minima_estoque']:g}"
+                        ),
+                    }
+                )
 
         produtos_sem_custo_query = (
             db.query(Produto)
@@ -280,6 +320,11 @@ class DashboardRepository:
         if loja_id:
             produtos_sem_custo_query = produtos_sem_custo_query.filter(
                 ProdutoLoja.loja_id == loja_id
+            )
+            
+        if departamentos_configurados:
+            produtos_sem_custo_query = produtos_sem_custo_query.filter(
+                Produto.departamento.in_(departamentos_ativos_codigos)
             )
 
         produtos_sem_custo = (
@@ -326,6 +371,11 @@ class DashboardRepository:
                 ProdutoLoja.loja_id == loja_id
             )
 
+        if departamentos_configurados:
+            produtos_sem_movimento_query = produtos_sem_movimento_query.filter(
+                Produto.departamento.in_(departamentos_ativos_codigos)
+            )
+            
         produtos_sem_movimento = (
             produtos_sem_movimento_query
             .limit(10)
@@ -340,6 +390,83 @@ class DashboardRepository:
                     "detalhe": "Nunca houve entrada registrada",
                 }
             )
+
+        # Periodo configurado para identificar produtos sem vendas
+        dias_sem_venda = tipos_configurados["dias_sem_venda"]
+
+        hoje = date.today()
+
+        # Analisa os últimos dias completos, excluindo o dia atual.
+        data_inicio_sem_venda = hoje - timedelta(days=dias_sem_venda)
+        data_fim_sem_venda = hoje
+        
+        # Verifica se existem vendas registradas em todos os dias
+        # do periodo configurado para a loja selecionada.
+        dias_com_vendas = (
+            db.query(func.count(func.distinct(Venda.data)))
+            .filter(
+                Venda.data >= data_inicio_sem_venda,
+                Venda.data < data_fim_sem_venda,
+            )
+        )
+
+        if loja_id is not None:
+            dias_com_vendas = dias_com_vendas.filter(
+                Venda.loja_id == loja_id
+            )
+
+        historico_completo = (
+            dias_com_vendas.scalar() == dias_sem_venda
+        )
+        
+        if tipos_configurados["sem_movimentacao"] and historico_completo:
+            produtos_sem_venda_query = (
+                db.query(Produto)
+                .join(
+                    ProdutoLoja,
+                    Produto.id == ProdutoLoja.produto_id,
+                )
+                .filter(
+                    ~db.query(Venda.id)
+                    .filter(
+                        Venda.codigo_produto == Produto.codigo,
+                        Venda.loja_id == ProdutoLoja.loja_id,
+                        Venda.data >= data_inicio_sem_venda,
+                        Venda.data < data_fim_sem_venda,
+                        Venda.quantidade > 0,
+                    )
+                    .exists()
+                )
+            )
+
+            if loja_id is not None:
+                produtos_sem_venda_query = produtos_sem_venda_query.filter(
+                    ProdutoLoja.loja_id == loja_id
+                )
+
+            if departamentos_configurados:
+                produtos_sem_venda_query = produtos_sem_venda_query.filter(
+                    Produto.departamento.in_(departamentos_ativos_codigos)
+                )
+
+            produtos_sem_venda = (
+                produtos_sem_venda_query
+                .distinct()
+                .limit(10)
+                .all()
+            )
+
+            for produto in produtos_sem_venda:
+                alertas.append(
+                    {
+                        "tipo": "SEM_VENDA",
+                        "produto": produto.descricao,
+                        "detalhe": (
+                            "Produto sem vendas nos últimos "
+                            f"{dias_sem_venda} dias"
+                        ),
+                    }
+                )
 
         return alertas
 

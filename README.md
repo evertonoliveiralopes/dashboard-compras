@@ -322,3 +322,33 @@ O Compra360 permite que cada usuario configure individualmente os tipos de alert
 
 As configuracoes estao persistidas e disponiveis pela API, mas ainda precisam ser aplicadas as regras de geracao dos alertas apresentados no Dashboard, respeitando os tipos habilitados, os limites definidos, os departamentos selecionados e a loja em consulta.
 
+
+## Alertas do Dashboard
+
+O dashboard utiliza as configurações individuais de cada usuário
+para identificar situações que exigem atenção.
+
+### Alertas disponíveis
+
+- SEM_ESTOQUE: produtos com estoque abaixo do limite configurado.
+- SEM_CUSTO: produtos com custo igual ou inferior a zero.
+- SEM_COMPRA: produtos sem entrada de compra identificada.
+- SEM_VENDA: produtos sem vendas no período configurado.
+
+### Alerta SEM_VENDA
+
+- Utiliza a quantidade de dias definida pelo usuário.
+- Considera somente dias completos, excluindo a data atual.
+- Respeita a loja selecionada e os departamentos habilitados.
+- Não exige estoque positivo, pois a falta de estoque pode explicar
+  a ausência de vendas.
+- Só é gerado quando existem registros de vendas em todas as datas
+  do período analisado.
+- Retorna até 10 produtos por consulta.
+
+### Validação
+
+O alerta SEM_VENDA foi testado com dados históricos da loja 1,
+utilizando o período de 26/09/2026 a 30/09/2026.
+
+Resultado: 10 alertas SEM_VENDA, sem erros de execução.
