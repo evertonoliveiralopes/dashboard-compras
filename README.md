@@ -8,6 +8,53 @@ O projeto nasceu de necessidades identificadas na minha atuação como Comprador
 
 > **Status:** projeto em evolução, atualmente executado e desenvolvido em ambiente local.
 
+## Telas do sistema
+
+### Dashboard gerencial
+
+Indicadores de compras, vendas e estoque, evolução mensal e alertas.
+
+![Dashboard do Compra360](docs/dashboard.png)
+
+> Capturas com dados comerciais e cadastrais ocultados para apresentação pública.
+
+<details>
+<summary>Ver outras telas do sistema</summary>
+
+### Login
+
+![Tela de login](docs/login.png)
+
+### Seleção de lojas
+
+![Seleção de lojas](docs/selecao-lojas.png)
+
+### Produtos
+
+Consulta de produtos com filtros por departamento e status.
+
+![Consulta de produtos](docs/produtos.png)
+
+### Fornecedores
+
+Consulta de fornecedores com filtros de busca, CNPJ e status.
+
+![Consulta de fornecedores](docs/fornecedores.png)
+
+### Central de importações
+
+Importação de arquivos e acompanhamento do histórico de processamento.
+
+![Central de importações](docs/importacoes.png)
+
+### Configuração de alertas
+
+Seleção dos tipos de alertas, parâmetros e departamentos monitorados.
+
+![Configuração de alertas](docs/configuracoes.png)
+
+</details>
+
 ## Tecnologias
 
 | Camada | Tecnologias |
