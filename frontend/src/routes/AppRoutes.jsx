@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "../pages/login/Login";
 import SelecaoLoja from "../pages/SelecaoLoja/SelecaoLoja";
 import Dashboard from "../pages/Dashboard/Dashboard";
+import BusinessIntelligence from "../pages/BusinessIntelligence/BusinessIntelligence";
 import ConfiguracaoAlertas from "../pages/ConfiguracaoAlertas/ConfiguracaoAlertas";
 import MainLayout from "../layouts/MainLayout";
 import Produtos from "../pages/Produtos/Produtos";
@@ -45,6 +46,17 @@ export default function AppRoutes() {
         }
       />
 
+
+      <Route
+        path="/business-intelligence"
+        element={
+          <PrivateRoute>
+            <MainLayout>
+              <BusinessIntelligence />
+            </MainLayout>
+          </PrivateRoute>
+        }
+      />
 
       {/* Configuração de Alertas */}
       <Route

@@ -81,6 +81,7 @@ export default function MainLayout({ children }) {
 
   const titulos = {
     "/dashboard": "Dashboard",
+    "/business-intelligence": "Gira",
     "/produtos": "Produtos",
     "/importacoes": "Importações",
     "/configuracao-alertas": "Configuração de Alertas",
@@ -142,7 +143,8 @@ export default function MainLayout({ children }) {
 
         <MenuItem
           icon={<AnalyticsIcon />}
-          text="Business Intelligence"
+          text="Gira • IA do Compra360"
+          onClick={() => handleNavigate("/business-intelligence")}
         />
 
         <MenuItem

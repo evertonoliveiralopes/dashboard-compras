@@ -234,6 +234,40 @@ A conexão com o PostgreSQL é configurada por variáveis de ambiente. O parâme
 - Evoluir os indicadores e alertas gerenciais.
 - Documentar o passo a passo de instalação e execução local.
 
+## Gira, a IA do Compra360
+
+Abra **Gira • IA do Compra360** no menu lateral para digitar uma pergunta.
+A página usa a loja selecionada no cabeçalho ou todas as lojas ativas quando
+**Todas as lojas** está marcado. O filtro de departamentos aceita múltiplas seleções.
+
+| Pergunta | Critério |
+| --- | --- |
+| Que produtos preciso comprar hoje? | Produtos ativos que venderam e têm cobertura de até 7 dias. A média usa até 30 dias corridos até a última venda importada. |
+| Que fornecedor teve aumento de preço? | Compara os custos positivos das duas últimas entradas do mesmo produto, fornecedor e loja. |
+| Que loja possui ruptura? | Conta produtos ativos com saldo zero ou negativo e venda positiva no intervalo disponível de até 30 dias. |
+| Qual o valor do estoque parado há mais de 90 dias? | Soma saldo atual × custo positivo da loja quando a última venda conhecida é anterior em mais de 90 dias à última data de vendas importada da loja. |
+
+As respostas mostram as datas das fontes e usam o que já foi importado.
+Lacunas no histórico geram avisos e a consulta continua para as lojas com dados.
+Itens sem última venda conhecida ou sem custo positivo são sinalizados na
+análise de estoque parado e ficam fora da soma.
+
+O backend reconhece as perguntas comuns localmente. O Gemini 3.1 Flash-Lite
+ajuda a identificar o assunto de outras formulações, recebendo somente termos
+genéricos de compras e estoque de um vocabulário fixo. As consultas, filtros,
+nomes, números e resultados comerciais ficam no Compra360.
+
+Para habilitar o Gemini no Windows, execute o bloco abaixo no PowerShell
+na pasta `backend`, com o ambiente virtual ativo. Quando solicitado, copie a
+chave no Google AI Studio, volte ao PowerShell e pressione Enter. O processo
+do backend recebe a chave pela variável de ambiente `GEMINI_API_KEY`.
+
+```powershell
+Read-Host 'Copie a chave no Google AI Studio, volte ao PowerShell e pressione Enter' | Out-Null
+$env:GEMINI_API_KEY = ([string](Get-Clipboard -Raw)).Trim()
+python -m uvicorn app.main:app --reload
+```
+
 ## Estrutura do repositório
 
 - [`backend/`](backend/) — API e regras de negócio.
