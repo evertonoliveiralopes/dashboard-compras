@@ -14,3 +14,8 @@ export async function buscarUsuarioAtual() {
 
   return response.data;
 }
+
+export function encerrarSessao() {
+  localStorage.removeItem("lojaSelecionada");
+  localStorage.removeItem("token");
+}

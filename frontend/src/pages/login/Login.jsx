@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Alert from "@mui/material/Alert";
 import { login } from "../../services/authService";
 import logo from "../../assets/images/compra360-logo.png";
@@ -18,6 +18,7 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { state } = useLocation();
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -34,19 +35,26 @@ export default function Login() {
       setErro("");
       setLoading(true);
 
-      const resposta = await login(email, senha);
+      const resposta = await login(email.trim(), senha);
 
       localStorage.setItem(
         "token",
         resposta.access_token
       );
 
-      navigate("/lojas");
+      navigate("/lojas", { replace: true });
 
     } catch (error) {
+      const status = error.response?.status;
+      const detail = error.response?.data?.detail;
 
-      setErro("E-mail ou senha inválidos.");
-
+      if (status === 401) {
+        setErro("E-mail ou senha inválidos.");
+      } else if (status === 403 && typeof detail === "string") {
+        setErro(detail);
+      } else {
+        setErro("Não foi possível concluir o login. Verifique a conexão com o Compra360 e tente novamente.");
+      }
     } finally {
 
       setLoading(false);
@@ -122,9 +130,14 @@ export default function Login() {
           }}
         >
           <Box component="form" onSubmit={handleSubmit} noValidate>
+            {state?.trocaUsuario && (
+              <Alert severity="info">Entre com outra conta para continuar.</Alert>
+            )}
             <TextField
               fullWidth
               label="E-mail"
+              autoComplete="username"
+              autoFocus={Boolean(state?.trocaUsuario)}
               variant="outlined"
               margin="normal"
               required
@@ -142,6 +155,7 @@ export default function Login() {
             <TextField
               fullWidth
               label="Senha"
+              autoComplete="current-password"
               type={showPassword ? "text" : "password"}
               value={senha}
               onChange={(e) => setSenha(e.target.value)}

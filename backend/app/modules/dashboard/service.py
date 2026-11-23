@@ -1,3 +1,4 @@
+from calendar import monthrange
 from datetime import date, timedelta
 from sqlalchemy.orm import Session
 
@@ -17,7 +18,7 @@ class DashboardService:
             mes += 12
             ano -= 1
 
-        return date(ano, mes, data.day)
+        return date(ano, mes, min(data.day, monthrange(ano, mes)[1]))
 
     def calcular_periodos(
         self,
@@ -153,10 +154,15 @@ class DashboardService:
 
         return {
             "valor_comprado": compras_atual,
+            "itens_comprados": indicadores["itens_comprados"],
+            "valor_comprado_anterior": compras_anterior,
             "variacao_compras": variacao_compras,
             "quantidade_vendida": vendas_atual,
+            "dias_vendas": indicadores["dias_vendas"],
+            "dias_periodo": (periodos["data_fim"] - periodos["data_inicio"]).days,
             "variacao_vendas": variacao_vendas,
             "valor_estoque": indicadores["valor_estoque"],
+            "produtos_estoque": indicadores["produtos_estoque"],
             "periodo": {
                 "data_inicio": periodos["data_inicio"],
                 "data_fim": periodos["data_fim"],
@@ -232,8 +238,8 @@ class DashboardService:
             data_fim=periodos["data_fim"],
         )
 
-    def alertas(self, db: Session, loja_id=None, usuario_id=None,):
-        return self.repository.alertas(db=db, loja_id=loja_id, usuario_id=usuario_id,)
+    def alertas(self, db: Session, loja_id=None, usuario_id=None, codigos_composicao=None):
+        return self.repository.alertas(db, loja_id, usuario_id, codigos_composicao)
 
     def ultimas_importacoes(self, db: Session, loja_id=None):
         return self.repository.ultimas_importacoes(db, loja_id)

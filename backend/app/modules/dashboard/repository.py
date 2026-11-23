@@ -233,7 +233,7 @@ class DashboardRepository:
             for linha in resultado
         ]
 
-    def alertas(self, db: Session, loja_id=None, usuario_id=None):
+    def alertas(self, db: Session, loja_id=None, usuario_id=None, codigos_composicao=None):
         
         config_service = ConfigAlertaService()
 
@@ -267,28 +267,27 @@ class DashboardRepository:
         
         alertas = []
 
-        produtos_sem_estoque_query = (
+        produtos_em_alerta = (
             db.query(Produto)
             .join(
                 ProdutoLoja,
                 Produto.id == ProdutoLoja.produto_id,
             )
+            .filter(Produto.status == 0)
+        )
+        if loja_id is not None:
+            produtos_em_alerta = produtos_em_alerta.filter(ProdutoLoja.loja_id == loja_id)
+        if departamentos_configurados:
+            produtos_em_alerta = produtos_em_alerta.filter(Produto.departamento.in_(departamentos_ativos_codigos))
+        if codigos_composicao:
+            produtos_em_alerta = produtos_em_alerta.filter(Produto.codigo.not_in(codigos_composicao))
+
+        produtos_sem_estoque = (
+            produtos_em_alerta
             .filter(
                 ProdutoLoja.estoque_atual
-                < tipos_configurados["quantidade_minima_estoque"]
+                < tipos_configurados["quantidade_minima_estoque"],
             )
-        )
-
-        if loja_id:
-            produtos_sem_estoque_query = produtos_sem_estoque_query.filter(
-                ProdutoLoja.loja_id == loja_id
-            )
-        if departamentos_configurados:
-            produtos_sem_estoque_query = produtos_sem_estoque_query.filter(
-                Produto.departamento.in_(departamentos_ativos_codigos)
-            )
-        produtos_sem_estoque = (
-            produtos_sem_estoque_query
             .limit(10)
             .all()
         )
@@ -298,6 +297,7 @@ class DashboardRepository:
                 alertas.append(
                     {
                         "tipo": "SEM_ESTOQUE",
+                        "codigo_produto": produto.codigo,
                         "produto": produto.descricao,
                         "detalhe": (
                             "Estoque abaixo do mínimo configurado: "
@@ -306,29 +306,9 @@ class DashboardRepository:
                     }
                 )
 
-        produtos_sem_custo_query = (
-            db.query(Produto)
-            .join(
-                ProdutoLoja,
-                Produto.id == ProdutoLoja.produto_id,
-            )
-            .filter(
-                ProdutoLoja.custo <= 0
-            )
-        )
-
-        if loja_id:
-            produtos_sem_custo_query = produtos_sem_custo_query.filter(
-                ProdutoLoja.loja_id == loja_id
-            )
-            
-        if departamentos_configurados:
-            produtos_sem_custo_query = produtos_sem_custo_query.filter(
-                Produto.departamento.in_(departamentos_ativos_codigos)
-            )
-
         produtos_sem_custo = (
-            produtos_sem_custo_query
+            produtos_em_alerta
+            .filter(ProdutoLoja.custo <= 0)
             .limit(10)
             .all()
         )
@@ -337,47 +317,27 @@ class DashboardRepository:
             alertas.append(
                 {
                     "tipo": "SEM_CUSTO",
+                    "codigo_produto": produto.codigo,
                     "produto": produto.descricao,
                     "detalhe": "Produto sem custo cadastrado",
                 }
             )
 
-        produtos_sem_movimento_query = (
-            db.query(Produto)
-            .join(
-                ProdutoLoja,
-                Produto.id == ProdutoLoja.produto_id,
-            )
-            .outerjoin(
-                ItemEntrada,
-                Produto.id == ItemEntrada.produto_id,
-            )
-            .outerjoin(
-                Entrada,
-                (ItemEntrada.entrada_id == Entrada.id)
-                & (
-                    (Entrada.loja_id == loja_id)
-                    if loja_id
-                    else True
-                ),
-            )
-            .filter(
-                Entrada.id == None
-            )
-        )
-
-        if loja_id:
-            produtos_sem_movimento_query = produtos_sem_movimento_query.filter(
-                ProdutoLoja.loja_id == loja_id
-            )
-
-        if departamentos_configurados:
-            produtos_sem_movimento_query = produtos_sem_movimento_query.filter(
-                Produto.departamento.in_(departamentos_ativos_codigos)
-            )
-            
+        # Produtos sem entradas de compra na respectiva loja
         produtos_sem_movimento = (
-            produtos_sem_movimento_query
+            produtos_em_alerta
+            .filter(
+                ~db.query(ItemEntrada.id)
+                .join(
+                    Entrada,
+                    Entrada.id == ItemEntrada.entrada_id,
+                )
+                .filter(
+                    ItemEntrada.produto_id == Produto.id,
+                    Entrada.loja_id == ProdutoLoja.loja_id,
+                )
+                .exists()
+            )
             .limit(10)
             .all()
         )
@@ -386,6 +346,7 @@ class DashboardRepository:
             alertas.append(
                 {
                     "tipo": "SEM_COMPRA",
+                    "codigo_produto": produto.codigo,
                     "produto": produto.descricao,
                     "detalhe": "Nunca houve entrada registrada",
                 }
@@ -394,38 +355,43 @@ class DashboardRepository:
         # Periodo configurado para identificar produtos sem vendas
         dias_sem_venda = tipos_configurados["dias_sem_venda"]
 
-        hoje = date.today()
-
-        # Analisa os últimos dias completos, excluindo o dia atual.
-        data_inicio_sem_venda = hoje - timedelta(days=dias_sem_venda)
-        data_fim_sem_venda = hoje
-        
-        # Verifica se existem vendas registradas em todos os dias
-        # do periodo configurado para a loja selecionada.
-        dias_com_vendas = (
-            db.query(func.count(func.distinct(Venda.data)))
-            .filter(
-                Venda.data >= data_inicio_sem_venda,
-                Venda.data < data_fim_sem_venda,
-            )
-        )
+                # Identifica a última data de vendas disponível.
+        ultima_venda_query = db.query(func.max(Venda.data))
 
         if loja_id is not None:
-            dias_com_vendas = dias_com_vendas.filter(
+            ultima_venda_query = ultima_venda_query.filter(
                 Venda.loja_id == loja_id
             )
 
-        historico_completo = (
-            dias_com_vendas.scalar() == dias_sem_venda
-        )
+        ultima_data_venda = ultima_venda_query.scalar()
+
+        historico_completo = False
+
+        if ultima_data_venda is not None:
+            # Considera os N dias corridos até a última data importada.
+            data_fim_sem_venda = ultima_data_venda + timedelta(days=1)
+            data_inicio_sem_venda = data_fim_sem_venda - timedelta(
+                days=dias_sem_venda
+            )
+
+            # Confirma que há histórico desde o início do período.
+            primeira_venda_query = db.query(func.min(Venda.data))
+
+            if loja_id is not None:
+                primeira_venda_query = primeira_venda_query.filter(
+                    Venda.loja_id == loja_id
+                )
+
+            primeira_data_venda = primeira_venda_query.scalar()
+
+            historico_completo = (
+                primeira_data_venda is not None
+                and primeira_data_venda <= data_inicio_sem_venda
+            )
         
         if tipos_configurados["sem_movimentacao"] and historico_completo:
-            produtos_sem_venda_query = (
-                db.query(Produto)
-                .join(
-                    ProdutoLoja,
-                    Produto.id == ProdutoLoja.produto_id,
-                )
+            produtos_sem_venda = (
+                produtos_em_alerta
                 .filter(
                     ~db.query(Venda.id)
                     .filter(
@@ -437,20 +403,6 @@ class DashboardRepository:
                     )
                     .exists()
                 )
-            )
-
-            if loja_id is not None:
-                produtos_sem_venda_query = produtos_sem_venda_query.filter(
-                    ProdutoLoja.loja_id == loja_id
-                )
-
-            if departamentos_configurados:
-                produtos_sem_venda_query = produtos_sem_venda_query.filter(
-                    Produto.departamento.in_(departamentos_ativos_codigos)
-                )
-
-            produtos_sem_venda = (
-                produtos_sem_venda_query
                 .distinct()
                 .limit(10)
                 .all()
@@ -460,6 +412,7 @@ class DashboardRepository:
                 alertas.append(
                     {
                         "tipo": "SEM_VENDA",
+                        "codigo_produto": produto.codigo,
                         "produto": produto.descricao,
                         "detalhe": (
                             "Produto sem vendas nos últimos "
@@ -554,7 +507,7 @@ class DashboardRepository:
         data_inicio_anterior,
         data_fim_anterior,
     ):
-        compras_atual = (
+        compras_atual, itens_comprados = (
             db.query(
                 func.coalesce(
                     func.sum(
@@ -562,7 +515,8 @@ class DashboardRepository:
                         * ItemEntrada.custo
                     ),
                     0,
-                )
+                ),
+                func.count(ItemEntrada.id),
             )
             .join(
                 Entrada,
@@ -573,7 +527,7 @@ class DashboardRepository:
                 Entrada.data_entrada >= data_inicio,
                 Entrada.data_entrada < data_fim,
             )
-            .scalar()
+            .one()
         )
 
         compras_anterior = (
@@ -598,19 +552,20 @@ class DashboardRepository:
             .scalar()
         )
 
-        vendas_atual = (
+        vendas_atual, dias_vendas = (
             db.query(
                 func.coalesce(
                     func.sum(Venda.quantidade),
                     0,
-                )
+                ),
+                func.count(func.distinct(Venda.data)),
             )
             .filter(
                 Venda.loja_id == loja_id,
                 Venda.data >= data_inicio,
                 Venda.data < data_fim,
             )
-            .scalar()
+            .one()
         )
 
         vendas_anterior = (
@@ -628,7 +583,7 @@ class DashboardRepository:
             .scalar()
         )
 
-        valor_estoque = (
+        valor_estoque, produtos_estoque = (
             db.query(
                 func.coalesce(
                     func.sum(
@@ -636,18 +591,22 @@ class DashboardRepository:
                         * ProdutoLoja.custo
                     ),
                     0,
-                )
+                ),
+                func.count(ProdutoLoja.id),
             )
             .filter(
                 ProdutoLoja.loja_id == loja_id
             )
-            .scalar()
+            .one()
         )
 
         return {
             "compras_atual": float(compras_atual or 0),
+            "itens_comprados": itens_comprados,
             "compras_anterior": float(compras_anterior or 0),
             "vendas_atual": float(vendas_atual or 0),
+            "dias_vendas": dias_vendas,
             "vendas_anterior": float(vendas_anterior or 0),
             "valor_estoque": float(valor_estoque or 0),
+            "produtos_estoque": produtos_estoque,
         }

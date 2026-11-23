@@ -1,5 +1,7 @@
 import {
   Paper,
+  Alert,
+  LinearProgress,
   Typography,
   Card,
   CardContent,
@@ -17,29 +19,23 @@ import { buscarConfiguracoesAlertas, salvarConfiguracoesAlertas, buscarTiposAler
 import { useEffect, useState } from "react";
 import { buscarDepartamentos } from "../../services/departamentoService";
 
-import { buscarUsuarioAtual } from "../../services/authService";
-
 export default function ConfiguracaoAlertas() {
   const [departamentos, setDepartamentos] = useState([]);
   const [departamentosSelecionados, setDepartamentosSelecionados] = useState([]);
-  const [usuario, setUsuario] = useState(null);
+  const [estado, setEstado] = useState("carregando");
   const [tiposAlertas, setTiposAlertas] = useState({  
     alteracao_preco: true,  
     estoque_minimo: false,  
-    sem_movimentacao: true,
     sem_movimentacao: true,
     percentual_alteracao_preco: 10,
     quantidade_minima_estoque: 20,
     dias_sem_venda: 30,
   });
 
- useEffect(() => {
+  useEffect(() => {
+    let ativo = true;
     async function carregarTela() {
       try {
-        const usuarioAtual = await buscarUsuarioAtual();
-
-        setUsuario(usuarioAtual);
-
         const [listaDepartamentos, configuracoes, configuracaoTipos,] =
           await Promise.all([
             buscarDepartamentos(),
@@ -47,6 +43,7 @@ export default function ConfiguracaoAlertas() {
             buscarTiposAlertas(),
           ]);
 
+        if (!ativo) return;
         setDepartamentos(listaDepartamentos);
         setTiposAlertas(configuracaoTipos);
 
@@ -55,13 +52,16 @@ export default function ConfiguracaoAlertas() {
           .map((item) => item.departamento_id);
 
         setDepartamentosSelecionados(selecionados);
+        setEstado("pronto");
 
       } catch (error) {
+        if (ativo) setEstado("erro");
         console.error("Erro ao carregar configurações:", error);
       }
     }
 
     carregarTela();
+    return () => { ativo = false; };
   }, []);
 
   function selecionarDepartamento(departamentoId) {
@@ -152,11 +152,14 @@ export default function ConfiguracaoAlertas() {
     colunas[index % 4].push(departamento);
   });
 
+  if (estado === "carregando") return <LinearProgress aria-label="Carregando configurações de alertas" />;
+  if (estado === "erro") return <Alert severity="error">Não foi possível carregar suas configurações de alertas.</Alert>;
+
   return (
     <Paper
-      elevation={0}
+      variant="outlined"
       sx={{
-        p: 3,
+        p: { xs: 1.5, sm: 2.5 },
         borderRadius: 3,
       }}
     >

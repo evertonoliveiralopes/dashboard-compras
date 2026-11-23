@@ -4,7 +4,8 @@ export async function buscarIndicadores(
   lojaId,
   periodo = "mes",
   dataInicio = null,
-  dataFim = null
+  dataFim = null,
+  signal
 ) {
   const params = {
     loja_id: lojaId,
@@ -18,7 +19,7 @@ export async function buscarIndicadores(
 
   const response = await api.get(
     "/dashboard/indicadores",
-    { params }
+    { params, signal }
   );
 
   return response.data;
@@ -26,4 +27,11 @@ export async function buscarIndicadores(
 export async function buscarUltimasImportacoes() {
   const { data } = await api.get("/dashboard/ultimas-importacoes");
   return data;
+}
+export async function buscarAlertas(lojaId, codigosComposicao = [], signal) {
+  const config = { params: { loja_id: lojaId || undefined }, signal };
+  const resposta = codigosComposicao.length > 0
+    ? await api.post("/dashboard/alertas", codigosComposicao, config)
+    : await api.get("/dashboard/alertas", config);
+  return resposta.data;
 }

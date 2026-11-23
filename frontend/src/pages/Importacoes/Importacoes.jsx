@@ -512,8 +512,7 @@ export default function Importacoes() {
       </Paper>
 
       <Box sx={{ mt: 4 }}>
-        <UltimasImportacoes />
-        atualizacao={atualizacaoHistorico}
+        <UltimasImportacoes atualizacao={atualizacaoHistorico} />
       </Box>
     </Box>
   );

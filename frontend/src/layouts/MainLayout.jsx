@@ -1,10 +1,7 @@
 import { useEffect, useState } from "react";
-
 import {
   AppBar,
-  Avatar,
   Box,
-  Divider,
   Drawer,
   IconButton,
   List,
@@ -12,317 +9,164 @@ import {
   ListItemIcon,
   ListItemText,
   Toolbar,
+  Tooltip,
   Typography,
   useMediaQuery,
 } from "@mui/material";
-
-import DashboardIcon from "@mui/icons-material/Dashboard";
-import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
-import Inventory2Icon from "@mui/icons-material/Inventory2";
-import LocalShippingIcon from "@mui/icons-material/LocalShipping";
-import AnalyticsIcon from "@mui/icons-material/Analytics";
-import PsychologyIcon from "@mui/icons-material/Psychology";
-import SettingsIcon from "@mui/icons-material/Settings";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import SpaceDashboardOutlinedIcon from "@mui/icons-material/SpaceDashboardOutlined";
+import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
+import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
+import LocalShippingOutlinedIcon from "@mui/icons-material/LocalShippingOutlined";
+import AutoGraphOutlinedIcon from "@mui/icons-material/AutoGraphOutlined";
+import RadarIcon from "@mui/icons-material/Radar";
+import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import MenuIcon from "@mui/icons-material/Menu";
-import FileUploadIcon from "@mui/icons-material/FileUpload";
+import CloseIcon from "@mui/icons-material/Close";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import UploadFileOutlinedIcon from "@mui/icons-material/UploadFileOutlined";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 
+import simboloCompra360 from "../assets/images/compra360-simbolo.png";
 import SeletorLoja from "../components/dashboard/SeletorLoja";
+import MenuConta from "../components/conta/MenuConta";
+import { AuthContext } from "../context/AuthContext";
+import { buscarUsuarioAtual, encerrarSessao } from "../services/authService";
+import "./MainLayout.css";
 
-import { useNavigate, useLocation } from "react-router-dom";
-
-const drawerWidth = 260;
+const PREFERENCIA_MENU = "compra360:menu-recolhido";
+const paginas = [
+  { path: "/dashboard", label: "Dashboard", icon: SpaceDashboardOutlinedIcon },
+  { path: "/compras", label: "Compras", icon: ShoppingCartOutlinedIcon, exibirTitulo: true },
+  { path: "/produtos", label: "Produtos", icon: Inventory2OutlinedIcon, exibirTitulo: true },
+  { path: "/importacoes", label: "Importações", icon: UploadFileOutlinedIcon },
+  { path: "/fornecedores", label: "Fornecedores", icon: LocalShippingOutlinedIcon },
+  { path: "/business-intelligence", label: "Gira", icon: AutoGraphOutlinedIcon },
+  { path: "/radar", label: "Radar do Comprador", icon: RadarIcon, exibirTitulo: true },
+  { path: "/configuracoes", label: "Configurações", icon: SettingsOutlinedIcon },
+];
 
 export default function MainLayout({ children }) {
   const navigate = useNavigate();
-  const location = useLocation();
-
-  const isMobile = useMediaQuery("(max-width:600px)");
+  const { pathname } = useLocation();
+  const isMobile = useMediaQuery((theme) => theme.breakpoints.down("md"));
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [menuRecolhido, setMenuRecolhido] = useState(() => localStorage.getItem(PREFERENCIA_MENU) === "1");
+  const [sessao, setSessao] = useState(null);
+  const [lojaSelecionada, setLojaSelecionada] = useState(() => JSON.parse(localStorage.getItem("lojaSelecionada")));
 
-  const [lojaSelecionada, setLojaSelecionada] = useState(() => {
-    const loja = localStorage.getItem("lojaSelecionada");
-    return loja ? JSON.parse(loja) : null;
-  });
+  const compacto = !isMobile && menuRecolhido;
+  const largura = compacto ? 72 : 248;
+  const pagina = paginas.find(({ path }) => pathname === path || pathname.startsWith(path + "/"));
+  const titulo = pagina?.label || "Compra360";
+  const acaoMenu = compacto ? "Expandir menu lateral" : "Recolher menu lateral";
 
   useEffect(() => {
-    const atualizarLoja = (evento) => {
-      setLojaSelecionada(evento.detail);
-    };
-
-    window.addEventListener(
-      "lojaSelecionadaAlterada",
-      atualizarLoja
-    );
-
-    return () => {
-      window.removeEventListener(
-        "lojaSelecionadaAlterada",
-        atualizarLoja
-      );
-    };
+    let ativo = true;
+    buscarUsuarioAtual().then((usuario) => {
+      if (ativo) setSessao({ usuario });
+    }).catch(() => {
+      if (ativo) setSessao({ erro: true });
+    });
+    return () => { ativo = false; };
   }, []);
 
-  const alterarLoja = (loja) => {
-    localStorage.setItem(
-      "lojaSelecionada",
-      JSON.stringify(loja)
-    );
+  useEffect(() => {
+    const atualizarLoja = (evento) => setLojaSelecionada(evento.detail);
+    window.addEventListener("lojaSelecionadaAlterada", atualizarLoja);
+    return () => window.removeEventListener("lojaSelecionadaAlterada", atualizarLoja);
+  }, []);
 
-    setLojaSelecionada(loja);
+  function alterarLoja(loja) {
+    localStorage.setItem("lojaSelecionada", JSON.stringify(loja));
+    window.dispatchEvent(new CustomEvent("lojaSelecionadaAlterada", { detail: loja }));
+  }
 
-    window.dispatchEvent(
-      new CustomEvent(
-        "lojaSelecionadaAlterada",
-        { detail: loja }
-      )
-    );
-  };
+  function recolherOuExpandir() {
+    setMenuRecolhido(!menuRecolhido);
+    localStorage.setItem(PREFERENCIA_MENU, menuRecolhido ? "0" : "1");
+  }
 
-  const titulos = {
-    "/dashboard": "Dashboard",
-    "/business-intelligence": "Gira",
-    "/produtos": "Produtos",
-    "/importacoes": "Importações",
-    "/configuracao-alertas": "Configuração de Alertas",
-  };
-
-  const tituloPagina = titulos[location.pathname] || "Compra360";
-
-  const handleDrawerToggle = () => {
-    setMobileOpen((prev) => !prev);
-  };
-
-  const handleNavigate = (path) => {
-    navigate(path);
-
-    if (isMobile) {
-      setMobileOpen(false);
-    }
-  };
-
-  const menu = (
-    <>
-      <Toolbar>
-        <Typography variant="h6" fontWeight="bold">
-          Compra360
-        </Typography>
-      </Toolbar>
-
-      <Divider />
-
-      <List>
-        <MenuItem
-          icon={<DashboardIcon />}
-          text="Dashboard"
-          onClick={() => handleNavigate("/dashboard")}
-        />
-
-        <MenuItem
-          icon={<ShoppingCartIcon />}
-          text="Compras"
-        />
-
-        <MenuItem
-          icon={<Inventory2Icon />}
-          text="Produtos"
-          onClick={() => handleNavigate("/produtos")}
-        />
-
-        <MenuItem
-          icon={<FileUploadIcon />}
-          text="Importações"
-          onClick={() => handleNavigate("/importacoes")}
-        />
-
-        <MenuItem
-          icon={<LocalShippingIcon />}
-          text="Fornecedores"
-          onClick={() => handleNavigate("/fornecedores")}
-        />
-
-        <MenuItem
-          icon={<AnalyticsIcon />}
-          text="Gira • IA do Compra360"
-          onClick={() => handleNavigate("/business-intelligence")}
-        />
-
-        <MenuItem
-          icon={<PsychologyIcon />}
-          text="Radar do Comprador"
-        />
-
-        <MenuItem
-          icon={<SettingsIcon />}
-          text="Configurações"
-          onClick={() => handleNavigate("/configuracao-alertas")}
-        />
-      </List>
-    </>
-  );
+  function sairDaConta(trocaUsuario) {
+    encerrarSessao();
+    navigate("/", { replace: true, state: { trocaUsuario } });
+  }
 
   return (
-    <Box sx={{ display: "flex" }}>
-      {/* Menu lateral */}
-      {isMobile ? (
-        <Drawer
-          variant="temporary"
-          open={mobileOpen}
-          onClose={handleDrawerToggle}
-          ModalProps={{
-            keepMounted: true,
-          }}
-          sx={{
-            "& .MuiDrawer-paper": {
-              width: "80vw",
-              maxWidth: 300,
-              boxSizing: "border-box",
-            },
-          }}
-        >
-          {menu}
-        </Drawer>
-      ) : (
-        <Drawer
-          variant="permanent"
-          sx={{
-            width: drawerWidth,
-            flexShrink: 0,
-            "& .MuiDrawer-paper": {
-              width: drawerWidth,
-              boxSizing: "border-box",
-            },
-          }}
-        >
-          {menu}
-        </Drawer>
-      )}
+    <Box sx={{ display: "flex", minHeight: "100dvh" }}>
+      <Drawer
+        variant={isMobile ? "temporary" : "permanent"}
+        open={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        sx={{ width: isMobile ? 0 : largura, flexShrink: 0 }}
+        slotProps={{
+          paper: {
+            id: "menu-lateral-compra360",
+            className: compacto ? "compra-sidebar compra-sidebar--compacta" : "compra-sidebar",
+            sx: { width: isMobile ? "min(288px, 88vw)" : largura },
+          },
+        }}
+      >
+        <Box className="compra-sidebar-marca">
+          <Box className="compra-sidebar-logotipo">
+            <img src={simboloCompra360} alt={compacto ? "Compra360" : ""} width="38" height="38" />
+            {!compacto && <span>Compra<span className="compra-sidebar-marca-number">360</span></span>}
+          </Box>
+          {isMobile ? (
+            <IconButton className="compra-sidebar-toggle" aria-label="Fechar menu lateral" onClick={() => setMobileOpen(false)}>
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          ) : (
+            <Tooltip title={acaoMenu} placement="right">
+              <IconButton className="compra-sidebar-toggle" aria-label={acaoMenu} aria-expanded={!compacto}
+                aria-controls="menu-lateral-compra360" onClick={recolherOuExpandir}>
+                {compacto ? <ChevronRightIcon fontSize="small" /> : <ChevronLeftIcon fontSize="small" />}
+              </IconButton>
+            </Tooltip>
+          )}
+        </Box>
 
-      {/* Área principal */}
-      <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-        <AppBar
-          position="static"
-          elevation={0}
-          color="inherit"
-        >
-          <Toolbar
-            sx={{
-              display: "flex",
-              flexDirection: { xs: "column", sm: "row" },
-              alignItems: "stretch",
-              justifyContent: "space-between",
-              gap: { xs: 1, sm: 0 },
-              px: { xs: 1.5, sm: 3 },
-              py: { xs: 1, sm: 0 },
-            }}
-          >
-            {/* Linha principal: menu/título e usuário */}
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                minWidth: 0,
-              }}
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  minWidth: 0,
-                }}
-              >
-                {isMobile && (
-                  <IconButton
-                    edge="start"
-                    onClick={handleDrawerToggle}
-                    sx={{ mr: 1, flexShrink: 0 }}
-                    aria-label="abrir menu"
-                  >
-                    <MenuIcon />
-                  </IconButton>
-                )}
-
-                <Typography
-                  variant="h6"
-                  fontWeight="600"
-                  noWrap
-                >
-                  {tituloPagina}
-                </Typography>
+        <Box component="nav" className="compra-sidebar-nav" aria-label="Menu principal">
+          <List disablePadding>
+            {paginas.map(({ path, label, icon: Icon }) => (
+              <Box component="li" className="compra-sidebar-item" key={path}>
+                <Tooltip title={compacto ? label : ""} placement="right">
+                  <ListItemButton component={NavLink} to={path} aria-label={label} className="compra-sidebar-link"
+                    onClick={() => setMobileOpen(false)}>
+                    <ListItemIcon><Icon /></ListItemIcon>
+                    {!compacto && <ListItemText primary={label} />}
+                  </ListItemButton>
+                </Tooltip>
               </Box>
+            ))}
+          </List>
+        </Box>
 
-              {isMobile && (
-                <IconButton sx={{ flexShrink: 0 }}>
-                  <Avatar>
-                    <AccountCircleIcon />
-                  </Avatar>
-                </IconButton>
-              )}
-            </Box>
+        <Box className="compra-sidebar-controles">
+          <SeletorLoja lojaSelecionada={lojaSelecionada} onChange={alterarLoja} lateral compacto={compacto} />
+          <MenuConta key={sessao?.usuario?.id} usuario={sessao?.usuario} encerrar={sairDaConta} compacto={compacto} />
+        </Box>
+      </Drawer>
 
-            {/* Loja e usuário */}
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: { xs: 0.5, sm: 2 },
-                width: { xs: "100%", sm: "auto" },
-              }}
-            >
-              <Box
-                sx={{
-                  flex: { xs: 1, sm: "initial" },
-                  minWidth: 0,
-                  "& .MuiFormControl-root": {
-                    width: { xs: "100%", sm: "auto" },
-                  },
-                }}
-              >
-                <SeletorLoja
-                  lojaSelecionada={lojaSelecionada}
-                  onChange={alterarLoja}
-                />
-              </Box>
-
-              <Typography
-                sx={{
-                  display: { xs: "none", sm: "block" },
-                }}
-              >
-                Administrador
-              </Typography>
-
-              {!isMobile && (
-                <IconButton>
-                  <Avatar>
-                    <AccountCircleIcon />
-                  </Avatar>
-                </IconButton>
-              )}
-            </Box>
-          </Toolbar>
-        </AppBar>
-
-        <Box
-          sx={{
-            p: { xs: 1.5, sm: 3 },
-            bgcolor: "#F5F7FA",
-            minHeight: "calc(100vh - 64px)",
-          }}
-        >
-          {children}
+      <Box sx={{ flex: 1, minWidth: 0, bgcolor: "background.default" }}>
+        {isMobile && (
+          <AppBar position="sticky" color="inherit" elevation={0} sx={{ borderBottom: 1, borderColor: "divider" }}>
+            <Toolbar variant="dense" sx={{ gap: 1, minHeight: 52 }}>
+              <IconButton edge="start" aria-label="Abrir menu lateral" aria-expanded={mobileOpen}
+                aria-controls={mobileOpen ? "menu-lateral-compra360" : undefined} onClick={() => setMobileOpen(true)}>
+                <MenuIcon />
+              </IconButton>
+              <Typography fontWeight={700} noWrap>{titulo}</Typography>
+            </Toolbar>
+          </AppBar>
+        )}
+        <Box component="main" sx={{ p: { xs: 1.5, sm: 2.5, md: 3 } }}>
+          {!isMobile && pagina?.exibirTitulo && (
+            <Typography component="h1" variant="h5" sx={{ mb: 2, color: "#142742", fontWeight: 700 }}>{titulo}</Typography>
+          )}
+          <AuthContext.Provider value={sessao}>{children}</AuthContext.Provider>
         </Box>
       </Box>
     </Box>
-  );
-}
-
-function MenuItem({ icon, text, onClick }) {
-  return (
-    <ListItemButton onClick={onClick}>
-      <ListItemIcon>{icon}</ListItemIcon>
-      <ListItemText primary={text} />
-    </ListItemButton>
   );
 }

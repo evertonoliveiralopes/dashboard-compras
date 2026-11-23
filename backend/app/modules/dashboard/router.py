@@ -1,4 +1,7 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, Query
+from pydantic import StringConstraints
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -90,6 +93,21 @@ def alertas(
         loja_id=loja_id,
         usuario_id=usuario.id,
     )
+
+@router.post("/alertas")
+def alertas_com_exclusoes(
+    codigos_composicao: list[Annotated[str, StringConstraints(min_length=1, max_length=30)]],
+    loja_id: int | None = Query(None),
+    usuario: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return service.alertas(
+        db=db,
+        loja_id=loja_id,
+        usuario_id=usuario.id,
+        codigos_composicao=set(codigos_composicao),
+    )
+
 
 @router.get("/ultimas-importacoes")
 def ultimas_importacoes(

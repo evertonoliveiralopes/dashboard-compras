@@ -240,7 +240,7 @@ export default function BusinessIntelligence() {
           />
           {!todasLojas && (
             <Typography variant="body2" color="text.secondary">
-              {loja?.nome ?? "Selecione uma loja no cabeçalho."}
+              {loja?.nome ?? "Selecione uma loja no menu lateral."}
             </Typography>
           )}
           <Autocomplete

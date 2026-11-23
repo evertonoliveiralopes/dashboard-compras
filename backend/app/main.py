@@ -9,6 +9,9 @@ from app.modules.dashboard.router import router as dashboard_router
 from app.modules.departamentos.router import router as departamentos_router
 from app.modules.config_alertas.router import router as config_alertas_router
 from app.modules.ia.router import router as ia_router
+from app.modules.compras.router import router as compras_router
+from app.modules.radar.router import router as radar_router
+from app.modules.configuracoes.router import router as configuracoes_router
 
 
 
@@ -36,6 +39,9 @@ app.include_router(dashboard_router)
 app.include_router(departamentos_router)
 app.include_router(config_alertas_router)
 app.include_router(ia_router)
+app.include_router(compras_router)
+app.include_router(radar_router)
+app.include_router(configuracoes_router)
 
 
 @app.get("/")

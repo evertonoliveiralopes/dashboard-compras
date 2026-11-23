@@ -1,235 +1,55 @@
-import { Grid, Box } from "@mui/material";
+import { Box, Typography } from "@mui/material";
+import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
+import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
+import PointOfSaleOutlinedIcon from "@mui/icons-material/PointOfSaleOutlined";
 
+import AnaliseCompras from "./AnaliseCompras";
 import KPICard from "./KPICard";
-
-import ComprasMesChart from "./charts/ComprasMesChart";
-import TopFornecedoresChart from "./charts/TopFornecedoresChart";
-import ComprasDepartamentoChart from "./charts/ComprasDepartamentoChart";
-
 import AlertasWidget from "./widgets/AlertasWidget";
+import { formatarIntervalo, moedaBR, numeroBR, percentualBR } from "./formatacao";
 
-import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
-import TrendingUpIcon from "@mui/icons-material/TrendingUp";
-import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
-import TrendingDownIcon from "@mui/icons-material/TrendingDown";
-import RemoveIcon from "@mui/icons-material/Remove";
-import PaidIcon from "@mui/icons-material/Paid";
+export default function DashboardGrid({ indicadores, carregando, lojaId, periodo, dataInicio, dataFim, periodoPronto }) {
+  const comCompras = indicadores?.itens_comprados > 0;
+  const comVendas = indicadores?.dias_vendas > 0;
+  const comEstoque = indicadores?.produtos_estoque > 0;
+  const comparavel = comCompras && indicadores.valor_comprado_anterior > 0;
+  const datas = indicadores?.periodo;
 
-
-function formatarMoeda(valor) {
-  return Number(valor || 0).toLocaleString(
-    "pt-BR",
-    {
-      style: "currency",
-      currency: "BRL",
-    }
-  );
-}
-
-
-function formatarNumero(valor) {
-  return Number(valor || 0).toLocaleString(
-    "pt-BR",
-    {
-      maximumFractionDigits: 3,
-    }
-  );
-}
-
-
-function formatarVariacao(valor) {
-  if (valor === null || valor === undefined) return "\u2014";
-
-  const numero = Number(valor);
-
-  const sinal = numero > 0 ? "+" : "";
-
-  return `${sinal}${numero.toLocaleString(
-    "pt-BR",
-    {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }
-  )}%`;
-}
-
-
-export default function DashboardGrid({
-  indicadores,
-  lojaId,
-  periodo,
-  dataInicio,
-  dataFim,
-}) {
-  const variacaoCompras =
-    Number(indicadores.variacao_compras || 0);
-
-  const variacaoVendas =
-    indicadores.variacao_vendas == null
-      ? null
-      : Number(indicadores.variacao_vendas);
+  let detalheCompras = "Sem entradas no período";
+  if (comparavel) {
+    detalheCompras = (
+      <>
+        <Typography component="span" variant="inherit" fontWeight={700} color="#254E82">
+          {percentualBR(indicadores.variacao_compras / 100)}
+        </Typography>
+        {" vs. " + formatarIntervalo(datas.data_inicio_anterior, datas.data_fim_anterior)}
+      </>
+    );
+  } else if (comCompras) {
+    detalheCompras = "Sem base de comparação no período anterior";
+  }
 
   return (
     <>
-      {/* KPIs */}
-      <Grid container spacing={3}>
-
-        <Grid size={{ xs: 12, md: 6, lg: 2 }}>
-          <KPICard
-            titulo="Valor Comprado"
-            valor={formatarMoeda(
-              indicadores.valor_comprado
-            )}
-            icone={
-              <ShoppingCartIcon
-                fontSize="large"
-              />
-            }
-          />
-        </Grid>
-
-
-        <Grid size={{ xs: 12, md: 6, lg: 2 }}>
-          <KPICard
-            titulo="Variação Compras"
-            valor={formatarVariacao(
-              variacaoCompras
-            )}
-            icone={
-              variacaoCompras >= 0 ? (
-                <TrendingUpIcon
-                  fontSize="large"
-                />
-              ) : (
-                <TrendingDownIcon
-                  fontSize="large"
-                />
-              )
-            }
-            cor={
-              variacaoCompras >= 0
-                ? "#2E7D32"
-                : "#C62828"
-            }
-          />
-        </Grid>
-
-
-        <Grid size={{ xs: 12, md: 6, lg: 2 }}>
-          <KPICard
-            titulo="Quantidade Vendida"
-            valor={formatarNumero(
-              indicadores.quantidade_vendida
-            )}
-            icone={
-              <PointOfSaleIcon
-                fontSize="large"
-              />
-            }
-            cor="#1565C0"
-          />
-        </Grid>
-
-
-        <Grid size={{ xs: 12, md: 6, lg: 2 }}>
-          <KPICard
-            titulo={"Varia\u00e7\u00e3o de Vendas nos \u00daltimos 30 Dias"}
-            valor={formatarVariacao(
-              variacaoVendas
-            )}
-            icone={
-              variacaoVendas === null ? (
-                <RemoveIcon fontSize="large" />
-              ) : variacaoVendas >= 0 ? (
-                <TrendingUpIcon
-                  fontSize="large"
-                />
-              ) : (
-                <TrendingDownIcon
-                  fontSize="large"
-                />
-              )
-            }
-            cor={
-              variacaoVendas === null
-                ? "#757575"
-                : variacaoVendas >= 0
-                  ? "#2E7D32"
-                  : "#C62828"
-            }
-          />
-        </Grid>
-
-
-        <Grid size={{ xs: 12, md: 6, lg: 3 }}>
-          <KPICard
-            titulo="Valor em Estoque"
-            valor={formatarMoeda(
-              indicadores.valor_estoque
-            )}
-            icone={
-              <PaidIcon
-                fontSize="large"
-              />
-            }
-            cor="#7B1FA2"
-          />
-        </Grid>
-
-      </Grid>
-
-
-      {/* Gráfico principal */}
-      <Box sx={{ mt: 4 }}>
-        <ComprasMesChart
-          lojaId={lojaId}
-          periodo={periodo}
-          dataInicio={dataInicio}
-          dataFim={dataFim}
-        />
+      <Box component="section" aria-label="Indicadores da loja" sx={{ display: "grid", gap: 1.5,
+        gridTemplateColumns: { xs: "minmax(0, 1fr)", md: "repeat(3, minmax(0, 1fr))" } }}>
+        <KPICard titulo="Compras no período" valor={comCompras ? moedaBR(indicadores.valor_comprado) : "—"}
+          icone={<ShoppingCartOutlinedIcon fontSize="small" />} principal carregando={carregando}
+          detalhe={indicadores ? detalheCompras : "Período sem consulta"} />
+        <KPICard titulo="Estoque atual a custo" valor={comEstoque ? moedaBR(indicadores.valor_estoque) : "—"}
+          icone={<Inventory2OutlinedIcon fontSize="small" />} carregando={carregando}
+          detalhe={comEstoque ? numeroBR(indicadores.produtos_estoque) + " produtos com posição cadastrada" : indicadores ? "Sem posição de estoque" : "Dados indisponíveis"} />
+        <KPICard titulo="Quantidade vendida" valor={comVendas ? numeroBR(indicadores.quantidade_vendida) : "—"}
+          icone={<PointOfSaleOutlinedIcon fontSize="small" />} carregando={carregando}
+          detalhe={comVendas
+            ? numeroBR(indicadores.dias_vendas) + " de " + numeroBR(indicadores.dias_periodo) + " dias com registros"
+            : indicadores ? "Sem registros de vendas no período" : "Período sem consulta"} />
       </Box>
-
-
-      {/* Segunda linha */}
-      <Grid
-        container
-        spacing={3}
-        sx={{ mt: 1 }}
-      >
-
-        <Grid size={{ xs: 12, lg: 6 }}>
-          <TopFornecedoresChart
-            lojaId={lojaId}
-            periodo={periodo}
-            dataInicio={dataInicio}
-            dataFim={dataFim}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, lg: 6 }}>
-          <AlertasWidget />
-        </Grid>
-
-      </Grid>
-
-
-      {/* Terceira linha */}
-      <Grid
-        container
-        spacing={3}
-        sx={{ mt: 1 }}
-      >
-
-        <Grid size={{ xs: 12 }}>
-          <ComprasDepartamentoChart
-            lojaId={lojaId}
-            periodo={periodo}
-            dataInicio={dataInicio}
-            dataFim={dataFim}
-          />
-        </Grid>
-
-      </Grid>
+      <Box sx={{ display: "grid", alignItems: "stretch", gap: 2,
+        gridTemplateColumns: { xs: "minmax(0, 1fr)", lg: "minmax(0, 1.12fr) minmax(0, 1fr)" } }}>
+        <AlertasWidget lojaId={lojaId} />
+        <AnaliseCompras lojaId={lojaId} periodo={periodo} dataInicio={dataInicio} dataFim={dataFim} periodoPronto={periodoPronto} />
+      </Box>
     </>
   );
 }

@@ -4,7 +4,8 @@ export async function buscarComprasMes(
   lojaId,
   periodo,
   dataInicio = null,
-  dataFim = null
+  dataFim = null,
+  signal
 ) {
   const params = {
     loja_id: lojaId,
@@ -18,7 +19,7 @@ export async function buscarComprasMes(
 
   const { data } = await api.get(
     "/dashboard/compras-mes",
-    { params }
+    { params, signal }
   );
 
   return data;
@@ -28,7 +29,8 @@ export async function buscarTopFornecedores(
   lojaId,
   periodo,
   dataInicio = null,
-  dataFim = null
+  dataFim = null,
+  signal
 ) {
   const params = {
     loja_id: lojaId,
@@ -42,7 +44,7 @@ export async function buscarTopFornecedores(
 
   const { data } = await api.get(
     "/dashboard/top-fornecedores",
-    { params }
+    { params, signal }
   );
 
   return data;
@@ -52,7 +54,8 @@ export async function buscarComprasDepartamento(
   lojaId,
   periodo,
   dataInicio = null,
-  dataFim = null
+  dataFim = null,
+  signal
 ) {
   const params = {
     loja_id: lojaId,
@@ -66,7 +69,7 @@ export async function buscarComprasDepartamento(
 
   const { data } = await api.get(
     "/dashboard/compras-departamento",
-    { params }
+    { params, signal }
   );
 
   return data;

@@ -1,3 +1,8 @@
+import csv
+import io
+import re
+from decimal import Decimal, InvalidOperation
+
 import pandas as pd
 from sqlalchemy.orm import Session
 
@@ -8,6 +13,64 @@ from app.utils.normalizar_codigo import normalizar_codigo
 
 from app.models.produto import Produto
 from app.models.produto_loja import ProdutoLoja
+
+
+CAMPOS_PRODUTO = (
+    "Código", "Descrição", "Depto.", "Status", "Custo", "Preço Venda",
+    "Estoque Atual", "Estoque Atual Troca",
+)
+
+
+def validar_colunas(colunas):
+    faltantes = [nome for nome in ("Código", "Descrição", "Estoque Atual") if nome not in colunas]
+    if faltantes:
+        raise ValueError(f"O arquivo de produtos não contém as colunas obrigatórias: {', '.join(faltantes)}.")
+
+
+def ler_csv_produtos(conteudo: bytes):
+    try:
+        texto = conteudo.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        texto = conteudo.decode("latin1")
+
+    leitor = csv.reader(io.StringIO(texto, newline=""), delimiter=";", strict=True)
+    colunas = [coluna.strip() for coluna in next(leitor, [])]
+    validar_colunas(colunas)
+    # O primeiro Código é o SKU. O relatório também tem um Código de família.
+    campos = {nome: colunas.index(nome) for nome in CAMPOS_PRODUTO if nome in colunas}
+    descricao = campos["Descrição"]
+    ean = colunas.index("EAN") if "EAN" in colunas else None
+    registros = []
+
+    for linha in leitor:
+        if not any(campo.strip() for campo in linha):
+            continue
+        if len(linha) == 2 and not linha[0].strip() and linha[1].strip().startswith("Quantidade de registros:"):
+            continue
+
+        excedentes = len(linha) - len(colunas)
+        if excedentes:
+            # Alguns CSVs do Arius incluem ponto e vírgula na descrição sem aspas.
+            if (
+                excedentes < 0 or ean != descricao + 1 or ean != campos["Estoque Atual"] - 1
+                or re.fullmatch(r"[0-9]{8,14}", linha[ean].strip())
+                or not re.fullmatch(r"[0-9]{8,14}", linha[ean + excedentes].strip())
+            ):
+                raise ValueError(f"As colunas da linha {leitor.line_num} do CSV estão desalinhadas.")
+            fim_descricao = descricao + excedentes + 1
+            linha = linha[:descricao] + [";".join(linha[descricao:fim_descricao])] + linha[fim_descricao:]
+
+        registros.append([linha[indice] for indice in campos.values()])
+
+    dados = pd.DataFrame(registros, columns=list(campos))
+    # Mantém a leitura de arquivos que usam ponto decimal quando toda a coluna segue esse formato.
+    for nome in ("Custo", "Preço Venda", "Estoque Atual", "Estoque Atual Troca"):
+        if nome in dados:
+            try:
+                dados[nome] = pd.to_numeric(dados[nome].str.strip().replace("", None))
+            except ValueError:
+                pass
+    return dados
 
 
 def limpar_status(valor):
@@ -57,6 +120,20 @@ def limpar_decimal(valor):
         return 0
 
 
+def limpar_saldo(valor, campo, codigo):
+    if pd.isna(valor) or (isinstance(valor, str) and not valor.strip()):
+        return Decimal("0")
+    if isinstance(valor, str):
+        valor = valor.strip().replace(".", "").replace(",", ".")
+    try:
+        saldo = Decimal(str(valor))
+    except InvalidOperation:
+        saldo = None
+    if saldo is None or not saldo.is_finite():
+        raise ValueError(f"{campo} inválido para o produto {codigo}.")
+    return saldo
+
+
 def importar_dataframe(
     df: pd.DataFrame,
     db: Session,
@@ -66,11 +143,11 @@ def importar_dataframe(
     atualizados = 0
 
     df = df.copy()
+    df.columns = [str(coluna).strip() for coluna in df.columns]
+    validar_colunas(df.columns)
 
     # Normaliza os códigos
-    df["_codigo_normalizado"] = df["Código"].apply(
-        normalizar_codigo_produto
-    )
+    df["_codigo_normalizado"] = df["Código"].map(normalizar_codigo_produto, na_action="ignore")
 
     # Remove registros sem código
     df = df[
@@ -185,11 +262,11 @@ def importar_dataframe(
                     "preco_venda": limpar_decimal(
                         linha.get("Preço Venda")
                     ),
-                    "estoque_atual": limpar_decimal(
-                        linha.get("Estoque Atual")
+                    "estoque_atual": limpar_saldo(
+                        linha.get("Estoque Atual"), "Estoque Atual", codigo
                     ),
-                    "estoque_trocas": limpar_decimal(
-                        linha.get("Estoque Atual Troca")
+                    "estoque_trocas": limpar_saldo(
+                        linha.get("Estoque Atual Troca"), "Estoque Atual Troca", codigo
                     ),
                 }
             )
@@ -214,8 +291,6 @@ def importar_dataframe(
             )
 
             db.execute(comando_loja)
-
-        db.commit()
 
     return {
         "inseridos": inseridos,

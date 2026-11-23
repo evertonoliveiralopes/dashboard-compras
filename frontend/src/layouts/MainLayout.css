@@ -1,0 +1,269 @@
+.compra-sidebar.MuiDrawer-paper {
+  --sidebar-text: #e5effd;
+  --sidebar-muted: #aec3de;
+  --sidebar-line: #274467;
+  box-sizing: border-box;
+  isolation: isolate;
+  overflow: hidden;
+  color: var(--sidebar-text);
+  background: linear-gradient(155deg, #071a36 6%, #0a2345 61%, #0d2e54 100%);
+  border-right: 1px solid #163657;
+}
+
+.compra-sidebar::before,
+.compra-sidebar::after {
+  position: absolute;
+  z-index: -1;
+  width: 274px;
+  height: 196px;
+  right: -145px;
+  bottom: 152px;
+  border: 1px solid #3394fb26;
+  border-radius: 50%;
+  transform: rotate(-34deg);
+  pointer-events: none;
+  content: "";
+}
+
+.compra-sidebar::after {
+  right: -171px;
+  bottom: 127px;
+  width: 313px;
+  height: 223px;
+  border-color: #4ab9ff19;
+}
+
+.compra-sidebar-marca {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  height: 79px;
+  margin: 0 14px;
+  padding-inline: 3px;
+  border-bottom: 1px solid var(--sidebar-line);
+}
+
+.compra-sidebar-logotipo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.055em;
+}
+
+.compra-sidebar-logotipo img {
+  display: block;
+  flex-shrink: 0;
+  padding: 3px;
+  border-radius: 11px;
+  background: #fff;
+}
+
+.compra-sidebar-marca-number {
+  color: #52b8ff;
+}
+
+.compra-sidebar .compra-sidebar-toggle {
+  flex: none;
+  color: var(--sidebar-muted);
+}
+
+.compra-sidebar .compra-sidebar-toggle:hover {
+  color: #fff;
+  background-color: #7dbbff1a;
+}
+
+.compra-sidebar-nav {
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #36567e transparent;
+  padding: 12px;
+}
+
+.compra-sidebar-item + .compra-sidebar-item {
+  margin-top: 3px;
+}
+
+.compra-sidebar .compra-sidebar-link {
+  position: relative;
+  gap: 11px;
+  min-height: 41px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  color: var(--sidebar-text);
+}
+
+.compra-sidebar-link .MuiListItemText-root {
+  margin: 0;
+}
+
+.compra-sidebar-link .MuiListItemText-primary {
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.compra-sidebar-link .MuiListItemIcon-root {
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  color: var(--sidebar-muted);
+}
+
+.compra-sidebar-link .MuiSvgIcon-root {
+  font-size: 19px;
+}
+
+.compra-sidebar .compra-sidebar-link:hover {
+  background-color: #68aaff18;
+  color: #fff;
+}
+
+.compra-sidebar .compra-sidebar-link.active {
+  color: #fff;
+  border-color: #3168a5;
+  background: linear-gradient(105deg, #18508d, #113760);
+}
+
+.compra-sidebar-link.active .MuiListItemIcon-root {
+  color: #96ddff;
+}
+
+.compra-sidebar-link.active::before {
+  position: absolute;
+  left: 0;
+  width: 3px;
+  height: 18px;
+  border-radius: 0 4px 4px 0;
+  background: #59c9ff;
+  content: "";
+}
+
+.compra-sidebar-controles {
+  display: grid;
+  flex-shrink: 0;
+  gap: 8px;
+  padding: 13px 12px calc(13px + env(safe-area-inset-bottom, 0px));
+  margin-top: auto;
+  border-top: 1px solid var(--sidebar-line);
+  background: #081d38de;
+}
+
+.compra-sidebar .compra-sidebar-controle {
+  min-height: 53px;
+  min-width: 0;
+  width: 100%;
+  color: #fff;
+  background: #183555;
+  border-radius: 10px;
+}
+
+.compra-sidebar .compra-sidebar-controle:hover {
+  background: #224364;
+}
+
+.compra-sidebar .compra-sidebar-loja .MuiOutlinedInput-notchedOutline,
+.compra-sidebar .compra-sidebar-conta {
+  border: 1px solid #375a81;
+}
+
+.compra-sidebar .compra-sidebar-loja:hover .MuiOutlinedInput-notchedOutline,
+.compra-sidebar .compra-sidebar-conta:hover {
+  border-color: #668bb3;
+}
+
+.compra-sidebar .compra-sidebar-loja.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #8bd6ff;
+}
+
+.compra-sidebar .compra-sidebar-loja .MuiSelect-select,
+.compra-sidebar .compra-sidebar-conta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  text-align: left;
+}
+
+.compra-sidebar .compra-sidebar-loja .MuiSelect-select {
+  padding: 8px 29px 8px 8px;
+}
+
+.compra-sidebar .compra-sidebar-conta {
+  justify-content: flex-start;
+  padding: 7px 8px;
+  background: #102b4b;
+}
+
+.compra-sidebar-loja-icone {
+  display: grid;
+  flex: 0 0 32px;
+  place-items: center;
+  height: 32px;
+  border-radius: 8px;
+  background: #2a527d;
+  color: #b9e7ff;
+}
+
+.compra-sidebar .compra-sidebar-loja .MuiSelect-icon,
+.compra-sidebar .compra-sidebar-conta-seta {
+  flex-shrink: 0;
+  color: var(--sidebar-muted);
+  font-size: 18px;
+}
+
+.compra-sidebar-identidade {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.compra-sidebar-identidade .compra-sidebar-identidade-nome {
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.compra-sidebar-identidade .compra-sidebar-identidade-detalhe {
+  color: var(--sidebar-muted);
+  font-size: 0.6875rem;
+}
+
+.compra-sidebar--compacta .compra-sidebar-marca {
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  height: 87px;
+  margin-inline: 10px;
+}
+
+.compra-sidebar--compacta .compra-sidebar-nav,
+.compra-sidebar--compacta .compra-sidebar-controles {
+  padding-inline: 9px;
+}
+
+.compra-sidebar--compacta .compra-sidebar-link {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+.compra-sidebar--compacta .compra-sidebar-loja .MuiSelect-select,
+.compra-sidebar--compacta .compra-sidebar-conta {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+.compra-sidebar--compacta .compra-sidebar-loja .MuiSelect-icon {
+  display: none;
+}
+
+.compra-sidebar .Mui-focusVisible,
+.compra-sidebar :focus-visible {
+  outline: 2px solid #96ddff;
+  outline-offset: -3px;
+}

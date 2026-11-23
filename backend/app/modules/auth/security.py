@@ -11,7 +11,6 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.usuario import Usuario
-from app.modules.auth.repository import AuthRepository
 
 pwd_context = CryptContext(
     schemes=["bcrypt"],
@@ -60,22 +59,22 @@ def get_current_user(
             algorithms=[settings.ALGORITHM],
         )
 
-        email = payload.get("sub")
-
-        if email is None:
+        usuario_id = payload.get("id")
+        if type(usuario_id) is not int or usuario_id < 1:
             raise credenciais_invalidas
 
     except JWTError:
         raise credenciais_invalidas
 
-    repository = AuthRepository()
+    usuario = db.get(Usuario, usuario_id)
 
-    usuario = repository.buscar_por_email(
-        db,
-        email,
-    )
-
-    if usuario is None:
+    if usuario is None or not usuario.ativo:
         raise credenciais_invalidas
 
+    return usuario
+
+
+def exigir_administrador(usuario: Usuario = Depends(get_current_user)) -> Usuario:
+    if not usuario.administrador:
+        raise HTTPException(status_code=403, detail="Esta área é restrita a administradores.")
     return usuario

@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import StoreIcon from "@mui/icons-material/Store";
 import logo from "../../assets/images/compra360-logo.png";
 import { buscarLojas } from "../../services/lojaService";
+import { encerrarSessao } from "../../services/authService";
 
 
 
@@ -190,6 +191,16 @@ export default function SelecaoLoja() {
           onClick={continuar}
         >
           Continuar
+        </Button>
+        <Button
+          fullWidth
+          sx={{ mt: 1 }}
+          onClick={() => {
+            encerrarSessao();
+            navigate("/", { replace: true });
+          }}
+        >
+          Sair
         </Button>
       </Box>
     </Box>

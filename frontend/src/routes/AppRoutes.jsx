@@ -3,8 +3,10 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "../pages/login/Login";
 import SelecaoLoja from "../pages/SelecaoLoja/SelecaoLoja";
 import Dashboard from "../pages/Dashboard/Dashboard";
+import Compras from "../pages/Compras/Compras";
+import Radar from "../pages/Radar/Radar";
 import BusinessIntelligence from "../pages/BusinessIntelligence/BusinessIntelligence";
-import ConfiguracaoAlertas from "../pages/ConfiguracaoAlertas/ConfiguracaoAlertas";
+import Configuracoes from "../pages/Configuracoes/Configuracoes";
 import MainLayout from "../layouts/MainLayout";
 import Produtos from "../pages/Produtos/Produtos";
 import Fornecedores from "../pages/Fornecedores/Fornecedores";
@@ -48,6 +50,17 @@ export default function AppRoutes() {
 
 
       <Route
+        path="/compras"
+        element={
+          <PrivateRoute>
+            <MainLayout>
+              <Compras />
+            </MainLayout>
+          </PrivateRoute>
+        }
+      />
+
+      <Route
         path="/business-intelligence"
         element={
           <PrivateRoute>
@@ -58,17 +71,29 @@ export default function AppRoutes() {
         }
       />
 
-      {/* Configuração de Alertas */}
       <Route
-        path="/configuracao-alertas"
+        path="/radar"
         element={
           <PrivateRoute>
             <MainLayout>
-              <ConfiguracaoAlertas />
+              <Radar />
             </MainLayout>
           </PrivateRoute>
         }
       />
+
+      {/* Configuração de Alertas */}
+      <Route
+        path="/configuracoes/:secao?"
+        element={
+          <PrivateRoute>
+            <MainLayout>
+              <Configuracoes />
+            </MainLayout>
+          </PrivateRoute>
+        }
+      />
+      <Route path="/configuracao-alertas" element={<Navigate to="/configuracoes/alertas" replace />} />
       {/* Produtos */}
       <Route
         path="/produtos"
